@@ -2,7 +2,7 @@ import File from "File"
 import Fn from "Function"
 import IO from "IO"
 import List from "List"
-import { fromMaybe } from "Maybe"
+import { Just, Nothing, fromMaybe } from "Maybe"
 import String from "String"
 import Tuple from "Tuple"
 import Wish from "Wish"
@@ -18,18 +18,66 @@ import VFile from "spirit-gum/VFile"
 
 
 
-alias KeyScope = #[
-  Integer,
-  { base :: String, indented :: Boolean, key :: String, scope :: List String },
-]
-alias TagRef = { base :: String, key :: String, scope :: List String }
+alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
 
-alias State = { active :: String, base :: String, scopes :: List KeyScope, tags :: List TagRef }
+type KeyLine
+  = Child(
+    // key
+    String,
+    // base
+    String,
+    // scope
+    List String,
+  )
+  | Base(
+    // key
+    String,
+    // base
+    String,
+    // scope
+    List String,
+  )
+  | InvalidLine(String)
+
+ksKey = where {
+  Child(k, _, _) =>
+    k
+
+  Base(k, _, _) =>
+    k
+
+  InvalidLine(k) =>
+    k
+}
+
+ksBase = where {
+  Child(_, k, _) =>
+    k
+
+  Base(_, k, _) =>
+    k
+
+  _ =>
+    ""
+}
+
+ksScope = where {
+  Child(_, _, k) =>
+    k
+
+  Base(_, _, k) =>
+    k
+
+  _ =>
+    []
+}
+
+alias WorkingState = { active :: String, base :: String, scopes :: List KeyScope }
 
 COMMENT = "^(.*)\\s?//(.*)$"
 
-INITIAL_STATE :: State
-INITIAL_STATE = { tags: [], scopes: [], active: "", base: "" }
+INITIAL_STATE :: WorkingState
+INITIAL_STATE = { scopes: [], active: "", base: "" }
 
 madlibJson = pipe(
   File.read,
@@ -66,6 +114,38 @@ chunk = where {
     #["", []]
 }
 
+checkAssignment = String.match("=")
+
+stripIndentation = String.replace("^\\s?-\\s?(.*)", "$1")
+isIndented = String.match("^\\s?-\\s?")
+grabAssignment = pipe(
+  Fn.ifElse(
+    String.match("="),
+    pipe(
+      String.split("="),
+      map(String.trim),
+      where {
+        [key, v] =>
+          #[Just(key), v]
+
+        _ =>
+          #[Nothing, ""]
+      },
+    ),
+    (v) => #[Nothing, v],
+  ),
+  where {
+    #[k, v] =>
+      #[
+        k,
+        pipe(
+          String.split(":"),
+          map(String.trim),
+          IO.pTrace("HY"),
+        )(v),
+      ]
+  },
+)
 rules = {
   base: Rule.lineRule(
     false,
@@ -83,9 +163,8 @@ rules = {
           return if (String.isEmpty(line2)) {
             #[state, ""]
           } else do {
-            hasAssignment = String.match("=", line2)
-            indented = String.match("^\\s?-\\s?", line2)
-            line3 = String.replace("^\\s?-\\s?(.*)", "$1", line2)
+            indented = isIndented(line2)
+            line3 = stripIndentation(line2)
             parts = pipe(
               String.split("="),
               map(
@@ -95,11 +174,15 @@ rules = {
                 ),
               ),
             )(line3)
+            hasAssignment = checkAssignment(line3)
             IO.pTrace(
               (hasAssignment ? " * " : "   ")
                 ++ (indented ? IO.yellow : IO.green)(indented ? "|>" : "# "),
               parts,
             )
+            IO.pTrace("HEY", line3)
+            IO.pTrace("YOU", grabAssignment(line3))
+
 
             // [] => ({tag: "", scope: []})
             return if (hasAssignment) do {
@@ -118,7 +201,7 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, #[i, converted]], active }, line3]
+              return #[{ ...state, scopes: [...state.scopes, converted], active }, line3]
             } else do {
               converted = where(parts) {
                 [x] =>
@@ -128,7 +211,7 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, #[i, converted]], active }, line3]
+              return #[{ ...state, scopes: [...state.scopes, converted], active }, line3]
             }
           }
         },
@@ -187,7 +270,6 @@ main = (args) => {
           VFile.postTransform(
             (src, lines, state) => pipe(
               .scopes,
-              map(Tuple.snd),
               IO.pTrace("YO"),
               map(
                 ({ base, key, scope }) => if (base == "") {
