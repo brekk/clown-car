@@ -1,0 +1,207 @@
+import File from "File"
+import Fn from "Function"
+import IO from "IO"
+import List from "List"
+import { fromMaybe } from "Maybe"
+import String from "String"
+import Tuple from "Tuple"
+import Wish from "Wish"
+
+import MadlibJson from "mad-at-json/Parse/MadlibJson"
+import Version from "mad-at-json/Version"
+import Line from "spirit-gum/Line"
+import Rule from "spirit-gum/Rule"
+import BodyTransformer from "spirit-gum/Rule/TransformerBody"
+import LineTransformer from "spirit-gum/Rule/TransformerLine"
+import Template from "spirit-gum/Template"
+import VFile from "spirit-gum/VFile"
+
+
+
+alias KeyScope = #[
+  Integer,
+  { base :: String, indented :: Boolean, key :: String, scope :: List String },
+]
+alias TagRef = { base :: String, key :: String, scope :: List String }
+
+alias State = { active :: String, base :: String, scopes :: List KeyScope, tags :: List TagRef }
+
+COMMENT = "^(.*)\\s?//(.*)$"
+
+INITIAL_STATE :: State
+INITIAL_STATE = { tags: [], scopes: [], active: "", base: "" }
+
+madlibJson = pipe(
+  File.read,
+  VFile.forceVFileError,
+  chain(
+    pipe(
+      MadlibJson.parse,
+      VFile.forceVFileError,
+    ),
+  ),
+)("./madlib.json")
+
+stripComments = Fn.when(String.match(COMMENT), String.replace(COMMENT, "$1"))
+
+sliceToEnd = (i, x) => String.slice(i, String.length(x), x)
+
+modifyFirstLetter = (fn, str) => pipe(
+  String.slice(0, 1),
+  fn,
+  mappend($, sliceToEnd(1, str)),
+)(str)
+
+capitalize = modifyFirstLetter(String.toUpper)
+
+uncapitalize = modifyFirstLetter(String.toLower)
+
+
+camelCaseList = List.reduce((agg, x) => agg == "" ? x : agg ++ capitalize(x), "")
+chunk = where {
+  [a, ...z] =>
+    #[a, z]
+
+  [] =>
+    #["", []]
+}
+
+rules = {
+  base: Rule.lineRule(
+    false,
+    "clown-car/meta/line",
+    [],
+    [
+      LineTransformer.ofLineRaw(
+        (state, i, line) => if (String.isEmpty(String.trim(line))) {
+          #[{ ...state, active: "" }, line]
+        } else do {
+          line2 = pipe(
+            stripComments,
+            String.trim,
+          )(line)
+          return if (String.isEmpty(line2)) {
+            #[state, ""]
+          } else do {
+            hasAssignment = String.match("=", line2)
+            indented = String.match("^\\s?-\\s?", line2)
+            line3 = String.replace("^\\s?-\\s?(.*)", "$1", line2)
+            parts = pipe(
+              String.split("="),
+              map(
+                pipe(
+                  String.trim,
+                  String.split(":"),
+                ),
+              ),
+            )(line3)
+            IO.pTrace(
+              (hasAssignment ? " * " : "   ")
+                ++ (indented ? IO.yellow : IO.green)(indented ? "|>" : "# "),
+              parts,
+            )
+
+            // [] => ({tag: "", scope: []})
+            return if (hasAssignment) do {
+              converted = where(parts) {
+                [[key], scope] =>
+                  !indented
+                    ? state.active == ""
+                      ? ({ key, scope, indented, base: state.active })
+                      : ({ key, scope, indented, base: state.active })
+                    : ({ key, scope: [], indented, base: state.active })
+
+                [[key]] =>
+                  ({ key, scope: [key], indented, base: state.active })
+
+                _ =>
+                  ({ key: "", scope: [], indented, base: state.active })
+              }
+              active = !indented ? converted.key : state.active
+              return #[{ ...state, scopes: [...state.scopes, #[i, converted]], active }, line3]
+            } else do {
+              converted = where(parts) {
+                [x] =>
+                  ({ key: camelCaseList(x), scope: x, indented, base: state.active })
+
+                _ =>
+                  ({ key: "", scope: [], indented, base: state.active })
+              }
+              active = !indented ? converted.key : state.active
+              return #[{ ...state, scopes: [...state.scopes, #[i, converted]], active }, line3]
+            }
+          }
+        },
+      ),
+    ],
+  ),
+}
+
+write = (path, x) => chain(
+  pipe(
+    File.write(path),
+    VFile.forceVFileError,
+    map(Fn.always(`Wrote to ${path}`)),
+  ),
+)(x)
+
+applySpiritGumWithRules = (json, src) => pipe(
+  VFile.fromPath(src, [rules.base]),
+  VFile.forceVFileError,
+  // map(
+  //   pipe(
+  //     Template.renderWithConverter(map(Line.render), (_, lines, _) => String.unlines(lines)),
+  //   ),
+  // ),
+  // write(src),
+)(INITIAL_STATE)
+
+
+fillfull = (badMsg, goodMsg, wish) => Wish.fulfill(
+  (bad) => {
+    IO.pTrace(badMsg, bad)
+  },
+  (good) => {
+    IO.pTrace(goodMsg, good)
+  },
+  wish,
+)
+chop = (i, xs) => List.slice(i, List.length(xs), xs)
+
+showScope = (scope) => List.length(scope) > 0
+  ? `[${
+    pipe(
+      map(show),
+      String.join(", "),
+    )(scope)
+  }]`
+  : `[]`
+
+main = (args) => {
+  pipe(
+    chain(
+      (json) => pipe(
+        chop(1),
+        map(applySpiritGumWithRules(json)),
+        map(
+          VFile.postTransform(
+            (src, lines, state) => pipe(
+              .scopes,
+              map(Tuple.snd),
+              IO.pTrace("YO"),
+              map(
+                ({ base, key, scope }) => if (base == "") {
+                  `${key}: Party.tagWithScope(${show(key)}, ${showScope(scope)}),`
+                } else {
+                  `${key}: Party.tagWithScope(${show(base)}, ${showScope(scope)})`
+                },
+              ),
+            )(state),
+          ),
+        ),
+        Wish.parallel,
+      )(args),
+    ),
+    fillfull("Barf!", "Yay!"),
+  )(madlibJson)
+}
