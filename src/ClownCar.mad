@@ -304,14 +304,6 @@ fillfull = (badMsg, goodMsg, wish) => Wish.fulfill(
   wish,
 )
 
-showScope = (scope) => List.length(scope) > 0
-  ? `[${
-    pipe(
-      map(show),
-      String.join(", "),
-    )(scope)
-  }]`
-  : `[]`
 
 
 main = (args) => {
