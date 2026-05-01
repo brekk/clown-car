@@ -1,5 +1,12 @@
-// ✪ This file automatically created by clown-car@0.0.1 from source: example.clowncar ✪
-tag = {
+/* ★★★ clown-car@0.0.1 ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: example.clowncar
+ */
+
+import Party from "PartyBus"
+
+
+
+export tag = {
   bicycle: Party.tag("bicycle"),
   body: Party.tagWithScope("bicycle", ["body"]),
   bodyFork: Party.tagWithScope("bicycle", ["body", "fork"]),

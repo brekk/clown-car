@@ -2,16 +2,14 @@ import File from "File"
 import Fn from "Function"
 import IO from "IO"
 import List from "List"
-import { Just, Nothing, fromMaybe } from "Maybe"
+import { Just, Nothing } from "Maybe"
 import String from "String"
-import Tuple from "Tuple"
 import Wish from "Wish"
 
 import MadlibJson from "mad-at-json/Parse/MadlibJson"
 import Version from "mad-at-json/Version"
 import Line from "spirit-gum/Line"
 import Rule from "spirit-gum/Rule"
-import BodyTransformer from "spirit-gum/Rule/TransformerBody"
 import LineTransformer from "spirit-gum/Rule/TransformerLine"
 import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
@@ -281,12 +279,16 @@ applySpiritGumWithRules = (json, src) => pipe(
       Template.renderWithConverter(
         map(Line.render),
         (_, lines, _) => `
-// ✪ This file automatically created by ${json.name}@${
-          Version.showVersion(json.version)
-        } from source: ${src} ✪
-tag = {
+/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
+ */
+
+import Party from "PartyBus"
+
+export tag = {
   ${String.unlines(lines)}
-}`,
+}`
+            ++ "\n\n",
       ),
     ),
   ),
@@ -294,7 +296,7 @@ tag = {
 )(INITIAL_STATE)
 
 
-fillfull = (badMsg, goodMsg, wish) => Wish.fulfill(
+fillfull = (badMsg, _, wish) => Wish.fulfill(
   (bad) => {
     IO.pTrace(badMsg, bad)
   },
