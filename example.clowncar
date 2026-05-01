@@ -1,6 +1,7 @@
 // comments are allowed, but only single line
-bicycle     // this is the base tag value: `PartyBus.tag("body")`
-- body      // this is an implicit tag, nested below the nearest base (so: `PartyBus.tagWithScope("bicycle", ["body"])`)
+// this is the base tag value: `PartyBus.tag("body")`
+bicycle 
+- body // this is an implicit nested tag (so: `PartyBus.tagWithScope("bicycle", ["body"])`)
 - body:fork // this is a nested implicit tag (so: `PartyBus.tagWithScope("bicycle", ["body", "fork"])` and this becomes `bodyFork`)
 - config = xyz // `config = PartyBus.tagWithScope("bicycle", ["xyz"])`
 - ref = config:seat // `ref = PartyBus.tagWithScope("bicycle", ["config", "seat"])`
@@ -16,4 +17,9 @@ bicycle     // this is the base tag value: `PartyBus.tag("body")`
 - wheel:brake:rear
 
 motorcycle = bicycle-ish // second base, `log.motorcycle = PartyBus.tag("bicycle-ish")`
-motoGogo = motorcycle:vroom
+- vroom // `log.vroom = PartyBus.tagWithScope("bicycle-ish", ["vroom"])
+- loud = exhaust:noise // `log.loud = PartyBus.tagWithScope("bicycle-ish", ["exhaust", "noise"])`
+
+motoGogo = motorcycle:vroom // `log.motoGogo = PartyBus.tagWithScope("motorcycle", ["vroom"])`
+
+skibbo = nub:jub:grub

@@ -18,6 +18,7 @@ import VFile from "spirit-gum/VFile"
 
 
 
+chop = (i, xs) => List.slice(i, List.length(xs), xs)
 alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
 
 type KeyLine
@@ -72,12 +73,12 @@ ksScope = where {
     []
 }
 
-alias WorkingState = { active :: String, base :: String, scopes :: List KeyScope }
+alias WorkingState = { active :: String, base :: KeyLine, scopes :: List KeyScope }
 
 COMMENT = "^(.*)\\s?//(.*)$"
 
 INITIAL_STATE :: WorkingState
-INITIAL_STATE = { scopes: [], active: "", base: "" }
+INITIAL_STATE = { scopes: [], active: "", base: InvalidLine("Initial State") }
 
 madlibJson = pipe(
   File.read,
@@ -141,11 +142,52 @@ grabAssignment = pipe(
         pipe(
           String.split(":"),
           map(String.trim),
-          IO.pTrace("HY"),
         )(v),
       ]
   },
 )
+
+showParts = pipe(
+  map(show),
+  String.join(", "),
+)
+
+lineTag = (isChild, key, base, head, rest) => (
+    List.isEmpty(rest)
+      ? isChild
+        ? (`${key}: Party.tagWithScope(${base}, [${show(head)}])`)
+        : (`${key}: Party.tag(${show(head)})`)
+      : (`${key}: Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
+  )
+    ++ ","
+
+
+applyWithBase = (isChild, base, vv) => where(vv) {
+  #[Just(key), parts] =>
+    where(#[List.first(parts), chop(1, parts)]) {
+      #[Just(head), rest] =>
+        lineTag(isChild, key, base, head, rest)
+
+      _ =>
+        "~~~"
+    }
+
+  #[Nothing, parts] =>
+    if (String.isEmpty(base)) {
+      where(#[List.first(parts), chop(1, parts)]) {
+        #[Just(head), rest] =>
+          pipe(
+            camelCaseList,
+            lineTag(isChild, $, base, head, rest),
+          )(parts)
+
+        _ =>
+          "~~~"
+      }
+    } else {
+      (`${camelCaseList(parts)}: Party.tagWithScope(${show(base)}, [${showParts(parts)}])`)
+    }
+}
 rules = {
   base: Rule.lineRule(
     false,
@@ -153,7 +195,7 @@ rules = {
     [],
     [
       LineTransformer.ofLineRaw(
-        (state, i, line) => if (String.isEmpty(String.trim(line))) {
+        (state, _, line) => if (String.isEmpty(String.trim(line))) {
           #[{ ...state, active: "" }, line]
         } else do {
           line2 = pipe(
@@ -175,14 +217,14 @@ rules = {
               ),
             )(line3)
             hasAssignment = checkAssignment(line3)
-            IO.pTrace(
-              (hasAssignment ? " * " : "   ")
-                ++ (indented ? IO.yellow : IO.green)(indented ? "|>" : "# "),
-              parts,
-            )
-            IO.pTrace("HEY", line3)
-            IO.pTrace("YOU", grabAssignment(line3))
 
+            assigned = grabAssignment(line3)
+            // IO.pTrace("HEY", line3)
+            // IO.pTrace("YOU", assigned)
+            line4 = pipe(
+              applyWithBase(indented, state.active),
+              IO.pTrace("BARFO"),
+            )(assigned)
 
             // [] => ({tag: "", scope: []})
             return if (hasAssignment) do {
@@ -201,7 +243,7 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, converted], active }, line3]
+              return #[{ ...state, scopes: [...state.scopes, converted], active }, line4]
             } else do {
               converted = where(parts) {
                 [x] =>
@@ -211,7 +253,7 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, converted], active }, line3]
+              return #[{ ...state, scopes: [...state.scopes, converted], active }, line4]
             }
           }
         },
@@ -231,11 +273,11 @@ write = (path, x) => chain(
 applySpiritGumWithRules = (json, src) => pipe(
   VFile.fromPath(src, [rules.base]),
   VFile.forceVFileError,
-  // map(
-  //   pipe(
-  //     Template.renderWithConverter(map(Line.render), (_, lines, _) => String.unlines(lines)),
-  //   ),
-  // ),
+  map(
+    pipe(
+      Template.renderWithConverter(map(Line.render), (_, lines, _) => String.unlines(lines)),
+    ),
+  ),
   // write(src),
 )(INITIAL_STATE)
 
@@ -249,7 +291,6 @@ fillfull = (badMsg, goodMsg, wish) => Wish.fulfill(
   },
   wish,
 )
-chop = (i, xs) => List.slice(i, List.length(xs), xs)
 
 showScope = (scope) => List.length(scope) > 0
   ? `[${
@@ -260,27 +301,25 @@ showScope = (scope) => List.length(scope) > 0
   }]`
   : `[]`
 
+oldRender = (state) => pipe(
+  .scopes,
+  IO.pTrace("YO"),
+  map(
+    ({ base, key, scope }) => if (base == "") {
+      `${key}: Party.tagWithScope(${show(key)}, ${showScope(scope)}),`
+    } else {
+      `${key}: Party.tagWithScope(${show(base)}, ${showScope(scope)})`
+    },
+  ),
+)(state)
+
 main = (args) => {
   pipe(
     chain(
       (json) => pipe(
         chop(1),
         map(applySpiritGumWithRules(json)),
-        map(
-          VFile.postTransform(
-            (src, lines, state) => pipe(
-              .scopes,
-              IO.pTrace("YO"),
-              map(
-                ({ base, key, scope }) => if (base == "") {
-                  `${key}: Party.tagWithScope(${show(key)}, ${showScope(scope)}),`
-                } else {
-                  `${key}: Party.tagWithScope(${show(base)}, ${showScope(scope)})`
-                },
-              ),
-            )(state),
-          ),
-        ),
+        // map(VFile.postTransform((src, lines, state) => lines)),
         Wish.parallel,
       )(args),
     ),
