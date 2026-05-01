@@ -1,12 +1,11 @@
 {
   "name": "clown-car",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "src/ClownCar.mad",
   "bin": "src/ClownCar.mad",
   "importAliases": {
     ".": "src"
   },
-
   "dependencies": [
     {
       "minVersion": "0.0.4",
