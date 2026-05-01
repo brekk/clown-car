@@ -280,7 +280,11 @@ applySpiritGumWithRules = (json, src) => pipe(
     pipe(
       Template.renderWithConverter(
         map(Line.render),
-        (_, lines, _) => `tag = {
+        (_, lines, _) => `
+// ✪ This file automatically created by ${json.name}@${
+          Version.showVersion(json.version)
+        } from source: ${src} ✪
+tag = {
   ${String.unlines(lines)}
 }`,
       ),

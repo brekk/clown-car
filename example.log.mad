@@ -1,0 +1,23 @@
+// ✪ This file automatically created by clown-car@0.0.1 from source: example.clowncar ✪
+tag = {
+  bicycle: Party.tag("bicycle"),
+  body: Party.tagWithScope("bicycle", ["body"]),
+  bodyFork: Party.tagWithScope("bicycle", ["body", "fork"]),
+  config: Party.tagWithScope(bicycle, ["xyz"]),
+  ref: Party.tagWithScope("config", ["seat"]),
+  handlebar: Party.tagWithScope("bicycle", ["handlebar"]),
+  handlebarBrake: Party.tagWithScope("bicycle", ["handlebar", "brake"]),
+  seat: Party.tagWithScope("bicycle", ["seat"]),
+  wheel: Party.tagWithScope("bicycle", ["wheel"]),
+  wheelSpoke: Party.tagWithScope("bicycle", ["wheel", "spoke"]),
+  wheelTire: Party.tagWithScope("bicycle", ["wheel", "tire"]),
+  wheelShifter: Party.tagWithScope("bicycle", ["wheel", "shifter"]),
+  wheelBrake: Party.tagWithScope("bicycle", ["wheel", "brake"]),
+  wheelBrakeFront: Party.tagWithScope("bicycle", ["wheel", "brake", "front"]),
+  wheelBrakeRear: Party.tagWithScope("bicycle", ["wheel", "brake", "rear"]),
+  motorcycle: Party.tag("bicycle-ish"),
+  vroom: Party.tagWithScope("motorcycle", ["vroom"]),
+  loud: Party.tagWithScope("exhaust", ["noise"]),
+  motoGogo: Party.tagWithScope("motorcycle", ["vroom"]),
+  skibbo: Party.tagWithScope("nub", ["jub", "grub"]),
+}
