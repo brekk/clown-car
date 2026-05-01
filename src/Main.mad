@@ -152,13 +152,14 @@ showParts = pipe(
   String.join(", "),
 )
 
-lineTag = (isChild, key, base, head, rest) => (
-    List.isEmpty(rest)
-      ? isChild
-        ? (`${key}: Party.tagWithScope(${base}, [${show(head)}])`)
-        : (`${key}: Party.tag(${show(head)})`)
-      : (`${key}: Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
-  )
+lineTag = (isChild, key, base, head, rest) => "  "
+    ++ key
+    ++ ": "
+    ++ (
+      List.isEmpty(rest)
+        ? isChild ? (`Party.tagWithScope(${base}, [${show(head)}])`) : (`Party.tag(${show(head)})`)
+        : (`Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
+    )
     ++ ","
 
 
@@ -185,7 +186,7 @@ applyWithBase = (isChild, base, vv) => where(vv) {
           "~~~"
       }
     } else {
-      (`${camelCaseList(parts)}: Party.tagWithScope(${show(base)}, [${showParts(parts)}])`)
+      (`  ${camelCaseList(parts)}: Party.tagWithScope(${show(base)}, [${showParts(parts)}]),`)
     }
 }
 rules = {
@@ -223,7 +224,6 @@ rules = {
             // IO.pTrace("YOU", assigned)
             line4 = pipe(
               applyWithBase(indented, state.active),
-              IO.pTrace("BARFO"),
             )(assigned)
 
             // [] => ({tag: "", scope: []})
@@ -270,15 +270,23 @@ write = (path, x) => chain(
   ),
 )(x)
 
+createClownName = (v) => String.replace("(.*)\\.clowncar", "$1.log.mad", v)
+
 applySpiritGumWithRules = (json, src) => pipe(
   VFile.fromPath(src, [rules.base]),
   VFile.forceVFileError,
+  map(IO.pTrace("SPIRIT GUMMMMM")),
   map(
     pipe(
-      Template.renderWithConverter(map(Line.render), (_, lines, _) => String.unlines(lines)),
+      Template.renderWithConverter(
+        map(Line.render),
+        (_, lines, _) => `tag = {
+  ${String.unlines(lines)}
+}`,
+      ),
     ),
   ),
-  // write(src),
+  write(createClownName(src)),
 )(INITIAL_STATE)
 
 
@@ -287,7 +295,7 @@ fillfull = (badMsg, goodMsg, wish) => Wish.fulfill(
     IO.pTrace(badMsg, bad)
   },
   (good) => {
-    IO.pTrace(goodMsg, good)
+    IO.putLine(String.join("\n", good))
   },
   wish,
 )
@@ -301,17 +309,6 @@ showScope = (scope) => List.length(scope) > 0
   }]`
   : `[]`
 
-oldRender = (state) => pipe(
-  .scopes,
-  IO.pTrace("YO"),
-  map(
-    ({ base, key, scope }) => if (base == "") {
-      `${key}: Party.tagWithScope(${show(key)}, ${showScope(scope)}),`
-    } else {
-      `${key}: Party.tagWithScope(${show(base)}, ${showScope(scope)})`
-    },
-  ),
-)(state)
 
 main = (args) => {
   pipe(
@@ -319,7 +316,6 @@ main = (args) => {
       (json) => pipe(
         chop(1),
         map(applySpiritGumWithRules(json)),
-        // map(VFile.postTransform((src, lines, state) => lines)),
         Wish.parallel,
       )(args),
     ),
