@@ -1,7 +1,7 @@
 # clown-car
 
-[![Madlib Project Badge](https://img.shields.io/badge/madlib-purple?logo=github&logoSize=auto)](//github.com/madlib-lang/madlib) <!-- <!-- $MADLIB.projectBadge --> -->
-[![clown-car v0.0.0](https://img.shields.io/badge/v0.0.0-purple?label=version)](//github.com/brekk/pilcrow) <!-- <!-- $MADLIB.json.version --> -->
+[![Madlib Project Badge](https://img.shields.io/badge/madlib-purple?logo=github&logoSize=auto)](//github.com/madlib-lang/madlib) <!-- $MADLIB.projectBadge -->
+[![clown-car v0.0.1](https://img.shields.io/badge/v0.0.1-purple?label=version)](//github.com/brekk/clown-car) <!-- $MADLIB.json.version -->
 
 a helpful addition to the `party-bus`
 
@@ -38,4 +38,9 @@ skibbo = nub:jub:grub
 
 ## Dependencies
 
-<!-- $MADLIB.dependencies -->
+ - [pilcrow](//github.com/brekk/pilcrow)
+ - [Study](//github.com/brekk/study)
+ - [PartyBus](//github.com/brekk/party-bus)
+ - [spirit-gum](//github.com/brekk/spirit-gum)
+
+

@@ -278,8 +278,7 @@ applySpiritGumWithRules = (json, src) => pipe(
     pipe(
       Template.renderWithConverter(
         map(Line.render),
-        (_, lines, _) => `
-/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
+        (_, lines, _) => `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
  */
 
@@ -288,7 +287,7 @@ import Party from "PartyBus"
 export tag = {
   ${String.unlines(lines)}
 }`
-            ++ "\n\n",
+            ++ "\n",
       ),
     ),
   ),

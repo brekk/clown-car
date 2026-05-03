@@ -1,12 +1,13 @@
+
 /* ★★★ clown-car@0.0.1 ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: example.clowncar
  */
 
 import Party from "PartyBus"
 
-
-
 export tag = {
+  
+
   bicycle: Party.tag("bicycle"),
   body: Party.tagWithScope("bicycle", ["body"]),
   bodyFork: Party.tagWithScope("bicycle", ["body", "fork"]),
@@ -22,9 +23,14 @@ export tag = {
   wheelBrake: Party.tagWithScope("bicycle", ["wheel", "brake"]),
   wheelBrakeFront: Party.tagWithScope("bicycle", ["wheel", "brake", "front"]),
   wheelBrakeRear: Party.tagWithScope("bicycle", ["wheel", "brake", "rear"]),
+
   motorcycle: Party.tag("bicycle-ish"),
   vroom: Party.tagWithScope("motorcycle", ["vroom"]),
   loud: Party.tagWithScope("exhaust", ["noise"]),
+
   motoGogo: Party.tagWithScope("motorcycle", ["vroom"]),
+
   skibbo: Party.tagWithScope("nub", ["jub", "grub"]),
+
 }
+
