@@ -4,7 +4,6 @@ import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import String from "String"
-import Tuple from "Tuple"
 import Wish from "Wish"
 
 import MadlibJson from "mad-at-json/Parse/MadlibJson"
@@ -24,8 +23,6 @@ chop = (i, xs) => List.slice(i, List.length(xs), xs)
 
 alias WorkingState = { active :: String, bases :: List #[String, String] }
 
-COMMENT = "^(.*)\\s?//(.*)$"
-
 INITIAL_STATE :: WorkingState
 INITIAL_STATE = { active: "", bases: [] }
 
@@ -41,7 +38,7 @@ export madlibJson = pipe(
 )("./madlib.json")
 
 
-grabAssignment = pipe(
+export grabAssignment = pipe(
   Fn.ifElse(
     String.match("="),
     pipe(
@@ -49,7 +46,7 @@ grabAssignment = pipe(
       map(String.trim),
       where {
         [key, v] =>
-          #[Just(key), v]
+          String.isEmpty(key) ? #[Nothing, ""] : #[Just(key), v]
 
         _ =>
           #[Nothing, ""]
@@ -69,7 +66,7 @@ grabAssignment = pipe(
   },
 )
 
-showParts = pipe(
+export showParts = pipe(
   map(show),
   String.join(", "),
 )
@@ -78,7 +75,9 @@ export lineTag = (isChild, key, base, head, rest) => #[
   key,
   (
     List.isEmpty(rest)
-      ? isChild ? (`Party.tagWithScope(${base}, [${show(head)}])`) : (`Party.tag(${show(head)})`)
+      ? isChild
+        ? (`Party.tagWithScope(${show(base)}, [${show(head)}])`)
+        : (`Party.tag(${show(head)})`)
       : (`Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
   ),
 ]
@@ -142,9 +141,6 @@ export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line)
     // [] => ({tag: "", scope: []})
     return if (hasAssignment) do {
       converted = where(parts) {
-        [[key], scope] =>
-          !indented ? state.active == "" ? key : key : key
-
         [[key]] =>
           key
 
@@ -232,7 +228,7 @@ applySpiritGumWithRules = (json, src) => pipe(
 )(INITIAL_STATE)
 
 
-fillfull = (badMsg, _, wish) => Wish.fulfill(
+fillfull = (badMsg, wish) => Wish.fulfill(
   (bad) => {
     IO.pTrace(badMsg, bad)
   },
@@ -253,6 +249,6 @@ main = (args) => {
         Wish.parallel,
       )(args),
     ),
-    fillfull("Barf!", "Yay!"),
+    fillfull("Barf!"),
   )(madlibJson)
 }

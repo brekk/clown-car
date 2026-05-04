@@ -1,3 +1,4 @@
+import { Just, Nothing, fromMaybe } from "Maybe"
 import Test from "Test"
 import Wish from "Wish"
 
@@ -7,6 +8,115 @@ import ClownCar from "@/ClownCar"
 
 
 
+Study.report(
+  ClownCar.grabAssignment,
+  "grabAssignment",
+  [
+    #["", #[Nothing, [""]]],
+    #["=", #[Nothing, [""]]],
+    #["===:::", #[Nothing, [""]]],
+    #["=:=:=:=", #[Nothing, [""]]],
+    #[":", #[Nothing, ["", ""]]],
+    #["malformed = ", #[Just("malformed"), [""]]],
+    #["hey", #[Nothing, ["hey"]]],
+    #["hey = bucko", #[Just("hey"), ["bucko"]]],
+    #["hey = friendo:friend", #[Just("hey"), ["friendo", "friend"]]],
+    #["look:just:calm:down", #[Nothing, ["look", "just", "calm", "down"]]],
+  ],
+)
+
+Study.report(
+  ClownCar.applyWithBase(true, "base"),
+  "applyWithBase - children, non-empty base",
+  [
+    #[#[Nothing, []], #["", `Party.tagWithScope("base", [])`]],
+    #[#[Just("astronaut"), []], #["", ""]],
+    #[#[Nothing, ["a"]], #["a", `Party.tagWithScope("base", ["a"])`]],
+    #[
+      #[Just("astronaut"), ["buck", "rogers"]],
+      #["astronaut", `Party.tagWithScope("buck", ["rogers"])`],
+    ],
+  ],
+)
+
+Study.report(
+  ClownCar.applyWithBase(true, ""),
+  "applyWithBase - children, empty base",
+  [
+    #[#[Nothing, []], #["", ""]],
+    #[#[Just("garbage"), []], #["", ""]],
+    #[#[Nothing, ["alpha"]], #["alpha", `Party.tagWithScope("", ["alpha"])`]],
+    #[#[Just("garbage"), ["for", "life"]], #["garbage", `Party.tagWithScope("for", ["life"])`]],
+  ],
+)
+
+Study.report(
+  ClownCar.lineTag(false, "testKey", "base", "head"),
+  "lineTag - non-children",
+  [
+    #[["a", "b", "c"], #["testKey", `Party.tagWithScope("head", ["a", "b", "c"])`]],
+    #[[], #["testKey", `Party.tag("head")`]],
+  ],
+)
+
+Study.report(
+  ClownCar.lineTag(true, "testKey", "base", "head"),
+  "lineTag - children",
+  [
+    #[["a", "b", "c"], #["testKey", `Party.tagWithScope("head", ["a", "b", "c"])`]],
+    #[[], #["testKey", `Party.tagWithScope("base", ["head"])`]],
+  ],
+)
+
+Study.report(
+  ClownCar.aggregateState({ active: "", bases: [] }, []),
+  "aggregateState",
+  [
+    #["", #[{ active: "", bases: [] }, ""]],
+    #["barf", #[{ active: "barf", bases: [#["barf", `Party.tag("barf")`]] }, "barf"]],
+    #["// my comment", #[{ active: "", bases: [] }, ""]],
+    #[
+      "steelcut = oats",
+      #[{ active: "", bases: [#["steelcut", `Party.tag("oats")`]] }, "steelcut = oats"],
+    ],
+    #[
+      " - check",
+      #[{ active: "", bases: [#["check", `Party.tagWithScope("", ["check"])`]] }, "check"],
+    ],
+    #[
+      " - check = valid",
+      #[{ active: "", bases: [#["check", `Party.tagWithScope("", ["valid"])`]] }, "check = valid"],
+    ],
+  ],
+)
+
+Study.report(
+  ClownCar.aggregateState({ active: "test", bases: [] }, []),
+  "aggregateState - active set",
+  [
+    #[
+      "barf",
+      #[{ active: "barf", bases: [#["barf", `Party.tagWithScope("test", ["barf"])`]] }, "barf"],
+    ],
+    #[
+      " - check",
+      #[{ active: "test", bases: [#["check", `Party.tagWithScope("test", ["check"])`]] }, "check"],
+    ],
+    #[" - =", #[{ active: "test", bases: [#["", `Party.tagWithScope("test", [""])`]] }, "="]],
+    #["//", #[{ active: "test", bases: [] }, ""]],
+    #[
+      " - hey =",
+      #[{ active: "test", bases: [#["hey", `Party.tagWithScope("test", [""])`]] }, "hey ="],
+    ],
+    #[
+      " - check = heck",
+      #[
+        { active: "test", bases: [#["check", `Party.tagWithScope("test", ["heck"])`]] },
+        "check = heck",
+      ],
+    ],
+  ],
+)
 Study.asyncReport(
   pipe(
     map(ClownCar.stateToLines($, "test-file", "blah", [], { bases: [] })),

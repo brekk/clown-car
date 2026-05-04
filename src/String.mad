@@ -4,7 +4,7 @@ import String from "String"
 
 
 
-chop = (i, xs) => String.slice(i, String.length(xs), xs)
+export chop = (i, xs) => String.slice(i, String.length(xs), xs)
 
 COMMENT = "^(.*)\\s?//(.*)$"
 

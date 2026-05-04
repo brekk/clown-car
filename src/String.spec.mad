@@ -1,0 +1,39 @@
+import String from "String"
+
+import Study from "Study"
+
+import _String from "@/String"
+
+
+
+chopTest = Study.report(_String.chop($, "parallelogram"))
+chopTest("chop", [#[9, "gram"]])
+chopTest("chop - negative", [#[-3, "ram"]])
+chopTest("chop - negative", [#[0, "parallelogram"]])
+
+Study.report(
+  _String.stripComments,
+  "stripComments",
+  [#["// leading comment", ""], #["content // trailing comment", "content "]],
+)
+
+Study.report(
+  _String.modifyFirstLetter($, "aspirational"),
+  "modifyFirstLetter",
+  [#[(x) => x ++ x, "aaspirational"]],
+)
+
+Study.report(_String.capitalize, "capitalize", [#["hey", "Hey"], #["", ""]])
+Study.report(
+  _String.camelCaseList,
+  "camelCaseList",
+  [
+    #[String.split("", "abcdef"), "aBCDEF"],
+    #[["many", "hands", "make", "light", "work"], "manyHandsMakeLightWork"],
+  ],
+)
+
+
+Study.report(_String.checkAssignment, "checkAssignment", [#["=", true], #["", false]])
+Study.report(_String.stripIndentation, "stripIndentation", [#[" - yo", "yo"], #["", ""]])
+Study.report(_String.isIndented, "isIndented", [#[" - yo", true], #["", false]])
