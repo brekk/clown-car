@@ -8,8 +8,8 @@
   },
   "dependencies": [
     {
-      "minVersion": "0.0.1",
-      "url": "https://github.com/brekk/pilcrow/archive/refs/tags/v0.0.1.zip",
+      "minVersion": "0.1.2",
+      "url": "https://github.com/brekk/pilcrow/archive/refs/tags/v0.1.2.zip",
       "description": "pilcrow"
     },
     {
