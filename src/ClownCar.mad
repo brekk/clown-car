@@ -4,6 +4,7 @@ import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import String from "String"
+import Tuple from "Tuple"
 import Wish from "Wish"
 
 import MadlibJson from "mad-at-json/Parse/MadlibJson"
@@ -17,7 +18,7 @@ import VFile from "spirit-gum/VFile"
 
 
 chop = (i, xs) => List.slice(i, List.length(xs), xs)
-alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
+// alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
 
 type KeyLine
   = Child(
@@ -71,12 +72,12 @@ ksScope = where {
     []
 }
 
-alias WorkingState = { active :: String, base :: KeyLine, scopes :: List KeyScope }
+alias WorkingState = { active :: String, bases :: List #[String, String] }
 
 COMMENT = "^(.*)\\s?//(.*)$"
 
 INITIAL_STATE :: WorkingState
-INITIAL_STATE = { scopes: [], active: "", base: InvalidLine("Initial State") }
+INITIAL_STATE = { active: "", bases: [] }
 
 madlibJson = pipe(
   File.read,
@@ -150,15 +151,14 @@ showParts = pipe(
   String.join(", "),
 )
 
-lineTag = (isChild, key, base, head, rest) => "  "
-    ++ key
-    ++ ": "
-    ++ (
-      List.isEmpty(rest)
-        ? isChild ? (`Party.tagWithScope(${base}, [${show(head)}])`) : (`Party.tag(${show(head)})`)
-        : (`Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
-    )
-    ++ ","
+lineTag = (isChild, key, base, head, rest) => #[
+  key,
+  (
+    List.isEmpty(rest)
+      ? isChild ? (`Party.tagWithScope(${base}, [${show(head)}])`) : (`Party.tag(${show(head)})`)
+      : (`Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
+  ),
+]
 
 
 applyWithBase = (isChild, base, vv) => where(vv) {
@@ -168,7 +168,7 @@ applyWithBase = (isChild, base, vv) => where(vv) {
         lineTag(isChild, key, base, head, rest)
 
       _ =>
-        "~~~"
+        #["", ""]
     }
 
   #[Nothing, parts] =>
@@ -181,10 +181,10 @@ applyWithBase = (isChild, base, vv) => where(vv) {
           )(parts)
 
         _ =>
-          "~~~"
+          #["", ""]
       }
     } else {
-      (`  ${camelCaseList(parts)}: Party.tagWithScope(${show(base)}, [${showParts(parts)}]),`)
+      #[camelCaseList(parts), `Party.tagWithScope(${show(base)}, [${showParts(parts)}])`]
     }
 }
 rules = {
@@ -220,7 +220,7 @@ rules = {
             assigned = grabAssignment(line3)
             // IO.pTrace("HEY", line3)
             // IO.pTrace("YOU", assigned)
-            line4 = pipe(
+            bases = pipe(
               applyWithBase(indented, state.active),
             )(assigned)
 
@@ -241,7 +241,15 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, converted], active }, line4]
+              return #[
+                {
+                  ...state,
+                  // scopes: [...state.scopes, converted],
+                  active,
+                  bases: [...state.bases, bases],
+                },
+                line3,
+              ]
             } else do {
               converted = where(parts) {
                 [x] =>
@@ -251,7 +259,15 @@ rules = {
                   ({ key: "", scope: [], indented, base: state.active })
               }
               active = !indented ? converted.key : state.active
-              return #[{ ...state, scopes: [...state.scopes, converted], active }, line4]
+              return #[
+                {
+                  ...state,
+                  // scopes: [...state.scopes, converted],
+                  active,
+                  bases: [...state.bases, bases],
+                },
+                line3,
+              ]
             }
           }
         },
@@ -269,6 +285,7 @@ write = (path, x) => chain(
 )(x)
 
 createClownName = (v) => String.replace("(.*)\\.clowncar", "$1.log.mad", v)
+INDENT = "  "
 
 applySpiritGumWithRules = (json, src) => pipe(
   VFile.fromPath(src, [rules.base]),
@@ -278,16 +295,30 @@ applySpiritGumWithRules = (json, src) => pipe(
     pipe(
       Template.renderWithConverter(
         map(Line.render),
-        (_, lines, _) => `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
+        (_, lines, state) => {
+          vals = pipe(
+            map((#[k, v]) => mappend(INDENT, k ++ ": " ++ v ++ ",")),
+          )(state.bases)
+          envVals = pipe(
+            map((#[k, v]) => mappend(INDENT, k ++ ": Partybus.env(tags." ++ k ++ "),")),
+          )(state.bases)
+          tapVals = pipe(
+            map((#[k, v]) => mappend(INDENT, k ++ ": Partybus.tap(env." ++ k ++ "),")),
+          )(state.bases)
+          return `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
  */
 
 import Party from "PartyBus"
 
-export tag = {
-  ${String.unlines(lines)}
+export tags = {${"\n" ++ String.unlines(vals)}
+}
+export env = {${"\n" ++ String.unlines(envVals)}
+}
+export tapped = {${"\n" ++ String.unlines(tapVals)}
 }`
-            ++ "\n",
+            ++ "\n"
+        },
       ),
     ),
   ),

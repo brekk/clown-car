@@ -1,13 +1,12 @@
-
 /* ★★★ clown-car@0.0.1 ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: example.clowncar
  */
 
 import Party from "PartyBus"
 
-export tag = {
-  
 
+
+export tags = {
   bicycle: Party.tag("bicycle"),
   body: Party.tagWithScope("bicycle", ["body"]),
   bodyFork: Party.tagWithScope("bicycle", ["body", "fork"]),
@@ -23,14 +22,53 @@ export tag = {
   wheelBrake: Party.tagWithScope("bicycle", ["wheel", "brake"]),
   wheelBrakeFront: Party.tagWithScope("bicycle", ["wheel", "brake", "front"]),
   wheelBrakeRear: Party.tagWithScope("bicycle", ["wheel", "brake", "rear"]),
-
   motorcycle: Party.tag("bicycle-ish"),
   vroom: Party.tagWithScope("motorcycle", ["vroom"]),
   loud: Party.tagWithScope("exhaust", ["noise"]),
-
   motoGogo: Party.tagWithScope("motorcycle", ["vroom"]),
-
   skibbo: Party.tagWithScope("nub", ["jub", "grub"]),
-
 }
-
+export env = {
+  bicycle: Partybus.env(tags.bicycle),
+  body: Partybus.env(tags.body),
+  bodyFork: Partybus.env(tags.bodyFork),
+  config: Partybus.env(tags.config),
+  ref: Partybus.env(tags.ref),
+  handlebar: Partybus.env(tags.handlebar),
+  handlebarBrake: Partybus.env(tags.handlebarBrake),
+  seat: Partybus.env(tags.seat),
+  wheel: Partybus.env(tags.wheel),
+  wheelSpoke: Partybus.env(tags.wheelSpoke),
+  wheelTire: Partybus.env(tags.wheelTire),
+  wheelShifter: Partybus.env(tags.wheelShifter),
+  wheelBrake: Partybus.env(tags.wheelBrake),
+  wheelBrakeFront: Partybus.env(tags.wheelBrakeFront),
+  wheelBrakeRear: Partybus.env(tags.wheelBrakeRear),
+  motorcycle: Partybus.env(tags.motorcycle),
+  vroom: Partybus.env(tags.vroom),
+  loud: Partybus.env(tags.loud),
+  motoGogo: Partybus.env(tags.motoGogo),
+  skibbo: Partybus.env(tags.skibbo),
+}
+export tapped = {
+  bicycle: Partybus.tap(env.bicycle),
+  body: Partybus.tap(env.body),
+  bodyFork: Partybus.tap(env.bodyFork),
+  config: Partybus.tap(env.config),
+  ref: Partybus.tap(env.ref),
+  handlebar: Partybus.tap(env.handlebar),
+  handlebarBrake: Partybus.tap(env.handlebarBrake),
+  seat: Partybus.tap(env.seat),
+  wheel: Partybus.tap(env.wheel),
+  wheelSpoke: Partybus.tap(env.wheelSpoke),
+  wheelTire: Partybus.tap(env.wheelTire),
+  wheelShifter: Partybus.tap(env.wheelShifter),
+  wheelBrake: Partybus.tap(env.wheelBrake),
+  wheelBrakeFront: Partybus.tap(env.wheelBrakeFront),
+  wheelBrakeRear: Partybus.tap(env.wheelBrakeRear),
+  motorcycle: Partybus.tap(env.motorcycle),
+  vroom: Partybus.tap(env.vroom),
+  loud: Partybus.tap(env.loud),
+  motoGogo: Partybus.tap(env.motoGogo),
+  skibbo: Partybus.tap(env.skibbo),
+}
