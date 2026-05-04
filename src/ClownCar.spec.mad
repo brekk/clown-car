@@ -1,0 +1,66 @@
+import Test from "Test"
+import Wish from "Wish"
+
+import Study from "Study"
+
+import ClownCar from "@/ClownCar"
+
+
+
+Study.asyncReport(
+  pipe(
+    map(ClownCar.stateToLines($, "test-file", "blah", [], { bases: [] })),
+    Wish.mapRej((_) => Test.Error("bad bad")),
+  ),
+  "stateToLines - no inputs",
+  [
+    #[
+      ClownCar.madlibJson,
+      `/* ★★★ clown-car@0.0.1 ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: test-file
+ */
+
+import Party from "PartyBus"
+
+export tags = {
+
+}
+export env = {
+
+}
+export tapped = {
+
+}`
+        ++ "\n",
+    ],
+  ],
+)
+
+Study.asyncReport(
+  pipe(
+    map(ClownCar.stateToLines($, "test-file", "blah", [], { bases: [#["skib", "dib"]] })),
+    Wish.mapRej((_) => Test.Error("bad bad")),
+  ),
+  "stateToLines - bases",
+  [
+    #[
+      ClownCar.madlibJson,
+      `/* ★★★ clown-car@0.0.1 ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: test-file
+ */
+
+import Party from "PartyBus"
+
+export tags = {
+  skib: dib,
+}
+export env = {
+  skib: Party.env(tags.skib),
+}
+export tapped = {
+  skib: Party.tap(env.skib),
+}`
+        ++ "\n",
+    ],
+  ],
+)

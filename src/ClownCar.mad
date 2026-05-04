@@ -15,62 +15,12 @@ import LineTransformer from "spirit-gum/Rule/TransformerLine"
 import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
 
+import _String from "@/String"
+
 
 
 chop = (i, xs) => List.slice(i, List.length(xs), xs)
 // alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
-
-type KeyLine
-  = Child(
-    // key
-    String,
-    // base
-    String,
-    // scope
-    List String,
-  )
-  | Base(
-    // key
-    String,
-    // base
-    String,
-    // scope
-    List String,
-  )
-  | InvalidLine(String)
-
-ksKey = where {
-  Child(k, _, _) =>
-    k
-
-  Base(k, _, _) =>
-    k
-
-  InvalidLine(k) =>
-    k
-}
-
-ksBase = where {
-  Child(_, k, _) =>
-    k
-
-  Base(_, k, _) =>
-    k
-
-  _ =>
-    ""
-}
-
-ksScope = where {
-  Child(_, _, k) =>
-    k
-
-  Base(_, _, k) =>
-    k
-
-  _ =>
-    []
-}
 
 alias WorkingState = { active :: String, bases :: List #[String, String] }
 
@@ -79,7 +29,7 @@ COMMENT = "^(.*)\\s?//(.*)$"
 INITIAL_STATE :: WorkingState
 INITIAL_STATE = { active: "", bases: [] }
 
-madlibJson = pipe(
+export madlibJson = pipe(
   File.read,
   VFile.forceVFileError,
   chain(
@@ -90,34 +40,7 @@ madlibJson = pipe(
   ),
 )("./madlib.json")
 
-stripComments = Fn.when(String.match(COMMENT), String.replace(COMMENT, "$1"))
 
-sliceToEnd = (i, x) => String.slice(i, String.length(x), x)
-
-modifyFirstLetter = (fn, str) => pipe(
-  String.slice(0, 1),
-  fn,
-  mappend($, sliceToEnd(1, str)),
-)(str)
-
-capitalize = modifyFirstLetter(String.toUpper)
-
-uncapitalize = modifyFirstLetter(String.toLower)
-
-
-camelCaseList = List.reduce((agg, x) => agg == "" ? x : agg ++ capitalize(x), "")
-chunk = where {
-  [a, ...z] =>
-    #[a, z]
-
-  [] =>
-    #["", []]
-}
-
-checkAssignment = String.match("=")
-
-stripIndentation = String.replace("^\\s?-\\s?(.*)", "$1")
-isIndented = String.match("^\\s?-\\s?")
 grabAssignment = pipe(
   Fn.ifElse(
     String.match("="),
@@ -151,7 +74,7 @@ showParts = pipe(
   String.join(", "),
 )
 
-lineTag = (isChild, key, base, head, rest) => #[
+export lineTag = (isChild, key, base, head, rest) => #[
   key,
   (
     List.isEmpty(rest)
@@ -161,7 +84,7 @@ lineTag = (isChild, key, base, head, rest) => #[
 ]
 
 
-applyWithBase = (isChild, base, vv) => where(vv) {
+export applyWithBase = (isChild, base, vv) => where(vv) {
   #[Just(key), parts] =>
     where(#[List.first(parts), chop(1, parts)]) {
       #[Just(head), rest] =>
@@ -176,7 +99,7 @@ applyWithBase = (isChild, base, vv) => where(vv) {
       where(#[List.first(parts), chop(1, parts)]) {
         #[Just(head), rest] =>
           pipe(
-            camelCaseList,
+            _String.camelCaseList,
             lineTag(isChild, $, base, head, rest),
           )(parts)
 
@@ -184,95 +107,80 @@ applyWithBase = (isChild, base, vv) => where(vv) {
           #["", ""]
       }
     } else {
-      #[camelCaseList(parts), `Party.tagWithScope(${show(base)}, [${showParts(parts)}])`]
+      #[_String.camelCaseList(parts), `Party.tagWithScope(${show(base)}, [${showParts(parts)}])`]
     }
 }
+
+export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line))) {
+  #[{ ...state, active: "" }, line]
+} else do {
+  line2 = pipe(
+    _String.stripComments,
+    String.trim,
+  )(line)
+  return if (String.isEmpty(line2)) {
+    #[state, ""]
+  } else do {
+    indented = _String.isIndented(line2)
+    line3 = _String.stripIndentation(line2)
+    parts = pipe(
+      String.split("="),
+      map(
+        pipe(
+          String.trim,
+          String.split(":"),
+        ),
+      ),
+    )(line3)
+    hasAssignment = _String.checkAssignment(line3)
+
+    assigned = grabAssignment(line3)
+    bases = pipe(
+      applyWithBase(indented, state.active),
+    )(assigned)
+
+    // [] => ({tag: "", scope: []})
+    return if (hasAssignment) do {
+      converted = where(parts) {
+        [[key], scope] =>
+          !indented ? state.active == "" ? key : key : key
+
+        [[key]] =>
+          key
+
+        _ =>
+          ""
+      }
+      active = !indented ? converted : state.active
+      return #[
+        {
+          ...state,
+          // scopes: [...state.scopes, converted],
+          active,
+          bases: [...state.bases, bases],
+        },
+        line3,
+      ]
+    } else do {
+      converted = where(parts) {
+        [x] =>
+          _String.camelCaseList(x)
+
+        _ =>
+          ""
+      }
+      active = !indented ? converted : state.active
+      return #[{ ...state, active, bases: [...state.bases, bases] }, line3]
+    }
+  }
+}
+
 rules = {
   base: Rule.lineRule(
     false,
     "clown-car/meta/line",
     [],
-    [
-      LineTransformer.ofLineRaw(
-        (state, _, line) => if (String.isEmpty(String.trim(line))) {
-          #[{ ...state, active: "" }, line]
-        } else do {
-          line2 = pipe(
-            stripComments,
-            String.trim,
-          )(line)
-          return if (String.isEmpty(line2)) {
-            #[state, ""]
-          } else do {
-            indented = isIndented(line2)
-            line3 = stripIndentation(line2)
-            parts = pipe(
-              String.split("="),
-              map(
-                pipe(
-                  String.trim,
-                  String.split(":"),
-                ),
-              ),
-            )(line3)
-            hasAssignment = checkAssignment(line3)
-
-            assigned = grabAssignment(line3)
-            // IO.pTrace("HEY", line3)
-            // IO.pTrace("YOU", assigned)
-            bases = pipe(
-              applyWithBase(indented, state.active),
-            )(assigned)
-
-            // [] => ({tag: "", scope: []})
-            return if (hasAssignment) do {
-              converted = where(parts) {
-                [[key], scope] =>
-                  !indented
-                    ? state.active == ""
-                      ? ({ key, scope, indented, base: state.active })
-                      : ({ key, scope, indented, base: state.active })
-                    : ({ key, scope: [], indented, base: state.active })
-
-                [[key]] =>
-                  ({ key, scope: [key], indented, base: state.active })
-
-                _ =>
-                  ({ key: "", scope: [], indented, base: state.active })
-              }
-              active = !indented ? converted.key : state.active
-              return #[
-                {
-                  ...state,
-                  // scopes: [...state.scopes, converted],
-                  active,
-                  bases: [...state.bases, bases],
-                },
-                line3,
-              ]
-            } else do {
-              converted = where(parts) {
-                [x] =>
-                  ({ key: camelCaseList(x), scope: x, indented, base: state.active })
-
-                _ =>
-                  ({ key: "", scope: [], indented, base: state.active })
-              }
-              active = !indented ? converted.key : state.active
-              return #[
-                {
-                  ...state,
-                  // scopes: [...state.scopes, converted],
-                  active,
-                  bases: [...state.bases, bases],
-                },
-                line3,
-              ]
-            }
-          }
-        },
-      ),
-    ],
+    [LineTransformer.ofLineRaw(aggregateState)],
   ),
 }
 
@@ -287,25 +195,17 @@ write = (path, x) => chain(
 createClownName = (v) => String.replace("(.*)\\.clowncar", "$1.log.mad", v)
 INDENT = "  "
 
-applySpiritGumWithRules = (json, src) => pipe(
-  VFile.fromPath(src, [rules.base]),
-  VFile.forceVFileError,
-  map(IO.pTrace("SPIRIT GUMMMMM")),
-  map(
-    pipe(
-      Template.renderWithConverter(
-        map(Line.render),
-        (_, lines, state) => {
-          vals = pipe(
-            map((#[k, v]) => mappend(INDENT, k ++ ": " ++ v ++ ",")),
-          )(state.bases)
-          envVals = pipe(
-            map((#[k, v]) => mappend(INDENT, k ++ ": Partybus.env(tags." ++ k ++ "),")),
-          )(state.bases)
-          tapVals = pipe(
-            map((#[k, v]) => mappend(INDENT, k ++ ": Partybus.tap(env." ++ k ++ "),")),
-          )(state.bases)
-          return `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
+export stateToLines = (json, src, _, _, state) => {
+  vals = pipe(
+    map((#[k, v]) => mappend(INDENT, k ++ `: ${v},`)),
+  )(state.bases)
+  envVals = pipe(
+    map((#[k, v]) => mappend(INDENT, k ++ `: Party.env(tags.${k}),`)),
+  )(state.bases)
+  tapVals = pipe(
+    map((#[k, v]) => mappend(INDENT, k ++ `: Party.tap(env.${k}),`)),
+  )(state.bases)
+  return `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
  */
 
@@ -317,9 +217,15 @@ export env = {${"\n" ++ String.unlines(envVals)}
 }
 export tapped = {${"\n" ++ String.unlines(tapVals)}
 }`
-            ++ "\n"
-        },
-      ),
+    ++ "\n"
+}
+
+applySpiritGumWithRules = (json, src) => pipe(
+  VFile.fromPath(src, [rules.base]),
+  VFile.forceVFileError,
+  map(
+    pipe(
+      Template.renderWithConverter(map(Line.render), stateToLines(json, src)),
     ),
   ),
   write(createClownName(src)),
