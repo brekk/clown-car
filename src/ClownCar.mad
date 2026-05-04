@@ -1,3 +1,6 @@
+import type { VFileError } from "spirit-gum/Errors"
+import type { ConcreteFile, WishCFile } from "spirit-gum/VFile"
+
 import File from "File"
 import Fn from "Function"
 import IO from "IO"
@@ -14,11 +17,11 @@ import LineTransformer from "spirit-gum/Rule/TransformerLine"
 import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
 
+import _List from "@/List"
 import _String from "@/String"
 
 
 
-chop = (i, xs) => List.slice(i, List.length(xs), xs)
 // alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
 
 alias WorkingState = { active :: String, bases :: List #[String, String] }
@@ -26,16 +29,6 @@ alias WorkingState = { active :: String, bases :: List #[String, String] }
 INITIAL_STATE :: WorkingState
 INITIAL_STATE = { active: "", bases: [] }
 
-export madlibJson = pipe(
-  File.read,
-  VFile.forceVFileError,
-  chain(
-    pipe(
-      MadlibJson.parse,
-      VFile.forceVFileError,
-    ),
-  ),
-)("./madlib.json")
 
 
 export grabAssignment = pipe(
@@ -85,7 +78,7 @@ export lineTag = (isChild, key, base, head, rest) => #[
 
 export applyWithBase = (isChild, base, vv) => where(vv) {
   #[Just(key), parts] =>
-    where(#[List.first(parts), chop(1, parts)]) {
+    where(#[List.first(parts), _List.chop(1, parts)]) {
       #[Just(head), rest] =>
         lineTag(isChild, key, base, head, rest)
 
@@ -95,7 +88,7 @@ export applyWithBase = (isChild, base, vv) => where(vv) {
 
   #[Nothing, parts] =>
     if (String.isEmpty(base)) {
-      where(#[List.first(parts), chop(1, parts)]) {
+      where(#[List.first(parts), _List.chop(1, parts)]) {
         #[Just(head), rest] =>
           pipe(
             _String.camelCaseList,
@@ -171,24 +164,14 @@ export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line)
   }
 }
 
-rules = {
-  base: Rule.lineRule(
-    false,
-    "clown-car/meta/line",
-    [],
-    [LineTransformer.ofLineRaw(aggregateState)],
-  ),
-}
+convertClownCarByLine = Rule.lineRule(
+  false,
+  "clown-car/meta/line",
+  [],
+  [LineTransformer.ofLineRaw(aggregateState)],
+)
 
-write = (path, x) => chain(
-  pipe(
-    File.write(path),
-    VFile.forceVFileError,
-    map(Fn.always(`Wrote to ${path}`)),
-  ),
-)(x)
 
-createClownName = (v) => String.replace("(.*)\\.clowncar", "$1.log.mad", v)
 INDENT = "  "
 
 export stateToLines = (json, src, _, _, state) => {
@@ -216,39 +199,9 @@ export tapped = {${"\n" ++ String.unlines(tapVals)}
     ++ "\n"
 }
 
-applySpiritGumWithRules = (json, src) => pipe(
-  VFile.fromPath(src, [rules.base]),
-  VFile.forceVFileError,
-  map(
-    pipe(
-      Template.renderWithConverter(map(Line.render), stateToLines(json, src)),
-    ),
-  ),
-  write(createClownName(src)),
+export applySpiritGumWithRules = (json, src) => pipe(
+  VFile.fromPath(src, [convertClownCarByLine]),
+  Wish.mapRej(Fn.always("Unable to convert rules into spirit-gum vfile")),
+  map(Template.renderWithConverter(map(Line.render), stateToLines(json, src))),
+  Wish.mapRej(Fn.always("Unable to render")),
 )(INITIAL_STATE)
-
-
-fillfull = (badMsg, wish) => Wish.fulfill(
-  (bad) => {
-    IO.pTrace(badMsg, bad)
-  },
-  (good) => {
-    IO.putLine(String.join("\n", good))
-  },
-  wish,
-)
-
-
-
-main = (args) => {
-  pipe(
-    chain(
-      (json) => pipe(
-        chop(1),
-        map(applySpiritGumWithRules(json)),
-        Wish.parallel,
-      )(args),
-    ),
-    fillfull("Barf!"),
-  )(madlibJson)
-}

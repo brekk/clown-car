@@ -1,0 +1,17 @@
+import File from "File"
+import Wish from "Wish"
+
+import MadlibJson from "mad-at-json/Parse/MadlibJson"
+
+
+
+export readAndParse = pipe(
+  File.read,
+  Wish.mapRej((_) => "Unable to read from madlib.json file"),
+  chain(
+    pipe(
+      MadlibJson.parse,
+      Wish.mapRej((_) => "Unable to parse madlib.json file"),
+    ),
+  ),
+)

@@ -1,0 +1,39 @@
+import IO from "IO"
+import String from "String"
+import Wish from "Wish"
+
+import ClownCar from "@/ClownCar"
+import _File from "@/File"
+import _List from "@/List"
+import MadlibJson from "@/MadlibJson"
+
+
+
+fillfull = (badMsg, wish) => Wish.fulfill(
+  (bad) => {
+    IO.pTrace(badMsg, bad)
+  },
+  (good) => {
+    IO.putLine(String.join("\n", good))
+  },
+  wish,
+)
+
+main = (args) => {
+  pipe(
+    MadlibJson.readAndParse,
+    chain(
+      (json) => pipe(
+        _List.chop(1),
+        map(
+          (src) => pipe(
+            ClownCar.applySpiritGumWithRules(json),
+            _File.writeDynamicName(src),
+          )(src),
+        ),
+        Wish.parallel,
+      )(args),
+    ),
+    fillfull("Barf!"),
+  )("./madlib.json")
+}

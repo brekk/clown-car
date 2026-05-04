@@ -17,7 +17,7 @@ bicycle
 - wheel:brake:rear
 
 motorcycle = bicycle-ish // second base, `log.motorcycle = PartyBus.tag("bicycle-ish")`
-- vroom // `log.vroom = PartyBus.tagWithScope("bicycle-ish", ["vroom"])
+// - vroom // `log.vroom = PartyBus.tagWithScope("bicycle-ish", ["vroom"])
 - loud = exhaust:noise // `log.loud = PartyBus.tagWithScope("bicycle-ish", ["exhaust", "noise"])`
 
 motoGogo = motorcycle:vroom // `log.motoGogo = PartyBus.tagWithScope("motorcycle", ["vroom"])`

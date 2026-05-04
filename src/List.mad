@@ -1,0 +1,5 @@
+import List from "List"
+
+
+
+export chop = (i, xs) => List.slice(i, List.length(xs), xs)

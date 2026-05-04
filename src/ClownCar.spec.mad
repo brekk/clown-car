@@ -5,6 +5,11 @@ import Wish from "Wish"
 import Study from "Study"
 
 import ClownCar from "@/ClownCar"
+import MadlibJson from "@/MadlibJson"
+
+
+
+madlibJson = MadlibJson.readAndParse("./madlib.json")
 
 
 
@@ -73,6 +78,10 @@ Study.report(
   "aggregateState",
   [
     #["", #[{ active: "", bases: [] }, ""]],
+    #[
+      "yes:no",
+      #[{ active: "yesNo", bases: [#["yesNo", `Party.tagWithScope("yes", ["no"])`]] }, "yes:no"],
+    ],
     #["barf", #[{ active: "barf", bases: [#["barf", `Party.tag("barf")`]] }, "barf"]],
     #["// my comment", #[{ active: "", bases: [] }, ""]],
     #[
@@ -94,9 +103,20 @@ Study.report(
   ClownCar.aggregateState({ active: "test", bases: [] }, []),
   "aggregateState - active set",
   [
+    #["hello = yes", #[{ active: "", bases: [#["hello", `Party.tag("yes")`]] }, "hello = yes"]],
     #[
       "barf",
       #[{ active: "barf", bases: [#["barf", `Party.tagWithScope("test", ["barf"])`]] }, "barf"],
+    ],
+    #[
+      "yass:nooo",
+      #[
+        {
+          active: "yassNooo",
+          bases: [#["yassNooo", `Party.tagWithScope("test", ["yass", "nooo"])`]],
+        },
+        "yass:nooo",
+      ],
     ],
     #[
       " - check",
@@ -109,10 +129,27 @@ Study.report(
       #[{ active: "test", bases: [#["hey", `Party.tagWithScope("test", [""])`]] }, "hey ="],
     ],
     #[
+      " - person:place",
+      #[
+        {
+          active: "test",
+          bases: [#["personPlace", `Party.tagWithScope("test", ["person", "place"])`]],
+        },
+        "person:place",
+      ],
+    ],
+    #[
       " - check = heck",
       #[
         { active: "test", bases: [#["check", `Party.tagWithScope("test", ["heck"])`]] },
         "check = heck",
+      ],
+    ],
+    #[
+      " - check = heck:oobleck",
+      #[
+        { active: "test", bases: [#["check", `Party.tagWithScope("heck", ["oobleck"])`]] },
+        "check = heck:oobleck",
       ],
     ],
   ],
@@ -125,7 +162,7 @@ Study.asyncReport(
   "stateToLines - no inputs",
   [
     #[
-      ClownCar.madlibJson,
+      madlibJson,
       `/* ★★★ clown-car@0.0.1 ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: test-file
  */
@@ -154,7 +191,7 @@ Study.asyncReport(
   "stateToLines - bases",
   [
     #[
-      ClownCar.madlibJson,
+      madlibJson,
       `/* ★★★ clown-car@0.0.1 ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: test-file
  */
