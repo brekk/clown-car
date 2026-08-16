@@ -8,24 +8,24 @@
   },
   "dependencies": [
     {
-      "minVersion": "0.1.2",
-      "url": "https://github.com/brekk/pilcrow/archive/refs/tags/v0.1.2.zip",
-      "description": "pilcrow"
-    },
-    {
-      "minVersion": "0.0.4",
-      "url": "https://github.com/brekk/study/archive/refs/tags/v0.0.4.zip",
+      "minVersion": "0.0.7",
+      "url": "https://github.com/brekk/study/archive/refs/tags/v0.0.7.zip",
       "description": "Study"
     },
     {
-      "minVersion": "0.0.8",
-      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.0.8.zip",
+      "minVersion": "0.0.9",
+      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.0.9.zip",
       "description": "PartyBus"
     },
     {
-      "minVersion": "0.2.1",
-      "url": "https://github.com/brekk/spirit-gum/archive/refs/tags/v0.2.1.zip",
+      "minVersion": "0.2.2",
+      "url": "https://github.com/brekk/spirit-gum/archive/refs/tags/v0.2.2.zip",
       "description": "spirit-gum"
+    },
+    {
+      "minVersion": "0.2.0",
+      "url": "https://github.com/brekk/utter/archive/refs/tags/v0.2.0.zip",
+      "description": "utter"
     }
   ]
 }
