@@ -1,5 +1,8 @@
+import type { MadlibDotJson } from "mad-at-json"
 import type { VFileError } from "spirit-gum/Errors"
 import type { ConcreteFile, WishCFile } from "spirit-gum/VFile"
+
+import type { ClownState } from "@/State"
 
 import File from "File"
 import Fn from "Function"
@@ -18,17 +21,12 @@ import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
 
 import _List from "@/List"
+import { INITIAL_STATE } from "@/State"
 import _String from "@/String"
 
 
 
 // alias KeyScope = { base :: String, indented :: Boolean, key :: String, scope :: List String }
-
-alias WorkingState = { active :: String, bases :: List #[String, String] }
-
-INITIAL_STATE :: WorkingState
-INITIAL_STATE = { active: "", bases: [] }
-
 
 
 export grabAssignment = pipe(
@@ -58,24 +56,25 @@ export grabAssignment = pipe(
       ]
   },
 )
-
 export showParts = pipe(
   map(show),
   String.join(", "),
 )
-
-export lineTag = (isChild, key, base, head, rest) => #[
-  key,
-  (
-    List.isEmpty(rest)
-      ? isChild
-        ? (`Party.tagWithScope(${show(base)}, [${show(head)}])`)
-        : (`Party.tag(${show(head)})`)
-      : (`Party.tagWithScope(${show(head)}, [${showParts(rest)}])`)
-  ),
-]
-
-
+export lineTag = (isChild, key, base, head, rest) => {
+  _h = show(head)
+  return #[
+    key,
+    if (List.isEmpty(rest)) {
+      if (isChild) {
+        `Party.tagWithScope(${show(base)}, [${_h}])`
+      } else {
+        `Party.tag(${_h})`
+      }
+    } else {
+      `Party.tagWithScope(${_h}, [${showParts(rest)}])`
+    },
+  ]
+}
 export applyWithBase = (isChild, base, vv) => where(vv) {
   #[Just(key), parts] =>
     where(#[List.first(parts), _List.chop(1, parts)]) {
@@ -102,7 +101,6 @@ export applyWithBase = (isChild, base, vv) => where(vv) {
       #[_String.camelCaseList(parts), `Party.tagWithScope(${show(base)}, [${showParts(parts)}])`]
     }
 }
-
 export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line))) {
   #[{ ...state, active: "" }, line]
 } else do {
@@ -163,17 +161,14 @@ export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line)
     }
   }
 }
-
 convertClownCarByLine = Rule.lineRule(
   false,
   "clown-car/meta/line",
   [],
   [LineTransformer.ofLineRaw(aggregateState)],
 )
-
-
 INDENT = "  "
-
+stateToLines :: MadlibDotJson -> String -> String -> List String -> ClownState -> String
 export stateToLines = (json, src, _, _, state) => {
   vals = pipe(
     map((#[k, v]) => mappend(INDENT, k ++ `: ${v},`)),
@@ -198,7 +193,7 @@ export tapped = {${"\n" ++ String.unlines(tapVals)}
 }`
     ++ "\n"
 }
-
+applySpiritGumWithRules :: MadlibDotJson -> String -> Wish String String
 export applySpiritGumWithRules = (json, src) => pipe(
   VFile.fromPath(src, [convertClownCarByLine]),
   Wish.mapRej(Fn.always("Unable to convert rules into spirit-gum vfile")),

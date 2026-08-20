@@ -1,0 +1,142 @@
+import type { Maybe } from "Maybe"
+import type { Wish } from "Wish"
+
+import type { Flag } from "ensign"
+import type { MadlibDotJson } from "mad-at-json"
+import type { Controller } from "utter/Types"
+
+import IO from "IO"
+import { Just, Nothing } from "Maybe"
+import Random from "Random"
+import Wish from "Wish"
+
+import Guard from "utter/Guard"
+import Interpreter from "utter/Interpreter"
+import Machine from "utter/Machine"
+import State from "utter/State"
+import Transition from "utter/Transition"
+import { Action, Controller, Reducer } from "utter/Types"
+
+
+
+export EVENTS = { initialize: "initialize", readFlags: "readFlags" }
+export STATES = {
+  initial: "initial",
+  configuration: "configuration",
+  failure: "failure",
+  success: "success",
+}
+export alias ClownState = {
+  active :: String,
+  bases :: List #[String, String],
+  input :: Maybe String,
+  madlibJson :: String,
+  output :: Maybe String,
+  showHelp :: Boolean,
+  useColor :: Boolean,
+}
+INITIAL_STATE :: ClownState
+export INITIAL_STATE = {
+  active: "",
+  bases: [],
+  input: Nothing,
+  madlibJson: "./madlib.json",
+  output: Nothing,
+  showHelp: false,
+  useColor: true,
+}
+// captureTheFlag :: GameState -> Flag -> #[Boolean, GameState]
+
+
+type ClownCarPayload
+  = EventSetFlags(List Flag)
+  | EventInitialize
+  | EventProcessing
+  | EventFailure
+  | EventSuccess
+alias ClownCarControl = Controller ClownCarPayload ClownState
+alias OutsideInfluence = ClownCarControl -> ClownCarControl
+stateName = pipe(
+  Interpreter.state,
+  map(State.name),
+)
+export alias HiddenController = {
+  get :: {} -> ClownCarControl,
+  send :: OutsideInfluence -> ClownCarControl,
+}
+permaloop :: ClownCarControl -> HiddenController
+export permaloop = (ctrl) => {
+  iter = 0
+  command = ctrl
+  send :: OutsideInfluence -> ClownCarControl
+  send = (run) => {
+    iter := iter + 1
+    command := pipe(
+      run,
+      // Log.tapped.loop("update " ++ show(iter) ++ ": ", stateName),
+    )(command)
+    return command
+  }
+  hidden :: HiddenController
+  hidden = { send, get: () => command }
+  return hidden
+}
+announceWith = (k) => Action(
+  (e, mPay, control, mCtx) => {
+    IO.pTrace((k ?? "") ++ "event: (" ++ e ++ ")", mPay)
+  },
+)
+announce = announceWith(Nothing)
+ACTIONS = [announce]
+hasConfiguration = Guard.create(
+  (ev, pay, mCtx) => where(mCtx) {
+    Just({ configured }) =>
+      configured
+
+    _ =>
+      false
+  },
+)
+GUARDS = { hasConfiguration, noConfiguration: Guard.invert(hasConfiguration) }
+processState = Reducer((ev, pay, mCtx) => mCtx)
+setFlags = Reducer(
+  (ev, pay, mCtx) => where(#[pay, mCtx]) {
+    #[EventSetFlags(flags), Just(ctx)] =>
+      Just({ ...ctx, flags, configured: true })
+
+    _ =>
+      mCtx
+  },
+)
+REDUCERS = { setFlags, processState }
+clowncarMachine = Machine.create(
+  "clown-car",
+  [
+    State.create(
+      STATES.initial,
+      [Transition.createComplex(EVENTS.initialize, STATES.configuration, ACTIONS, [], [])],
+    ),
+    State.create(
+      STATES.configuration,
+      [
+        Transition.createComplex(
+          EVENTS.readFlags,
+          STATES.configuration,
+          ACTIONS,
+          [GUARDS.noConfiguration],
+          [REDUCERS.setFlags],
+        ),
+        Transition.createComplex(
+          EVENTS.readFlags,
+          STATES.configuration,
+          ACTIONS,
+          [GUARDS.hasConfiguration],
+          [REDUCERS.processState],
+        ),
+      ],
+    ),
+    State.createFinal(STATES.failure),
+    State.createFinal(STATES.success),
+  ],
+)
+clowncarService = Interpreter.create(Just(INITIAL_STATE), clowncarMachine)

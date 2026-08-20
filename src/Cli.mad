@@ -1,39 +1,139 @@
+import type { Flag } from "ensign/Flags"
+import type { MadlibDotJson } from "mad-at-json"
+
+import type { ClownState } from "@/State"
+
+import { Left, Right } from "Either"
+import Either from "Either"
+import File from "File"
+import Fn from "Function"
 import IO from "IO"
+import List from "List"
+import { Just, Nothing } from "Maybe"
 import String from "String"
 import Wish from "Wish"
+
+import Ensign from "ensign/Declared"
+import Declared from "ensign/Declared/Flags"
+import EPrint from "ensign/Declared/Print"
+import EFlags from "ensign/Flags"
+import MadAtJson from "mad-at-json"
 
 import ClownCar from "@/ClownCar"
 import _File from "@/File"
 import _List from "@/List"
 import MadlibJson from "@/MadlibJson"
+import State from "@/State"
 
 
 
-fillfull = (badMsg, wish) => Wish.fulfill(
+CLOWN = "🤡🚗"
+export FLAGS = [
+  Declared.flagBoolean("help", ["h"], "These helpful explanations you're reading"),
+  Declared.flagBoolean("color", ["K"], "Use color? (default: true)"),
+  Declared.flagString(
+    "madlib-json",
+    ["madlib", "M"],
+    "Where is the madlib.json file? (default: ./madlib.json)",
+  ),
+  Declared.flagString("input", ["i"], "Set the input for the clowncar. Required."),
+  Declared.flagString(
+    "output",
+    ["o"],
+    "Set the output for the clowncar. Inferred from `--input` if not provided.",
+  ),
+]
+renderHelp = (useColor, flags) => {
+  fn = (useColor ? EPrint.printLegendWithColor : EPrint.printLegend)
+  return CLOWN ++ "\n" ++ fn(flags)
+}
+processFlagState :: ClownState
+  -> (ClownState -> Flag -> #[Boolean, ClownState])
+  -> List Flag
+  -> ClownState
+processFlagState = (state, process, flags) => {
+  walker = (done, aggState, toProcess) => if (done) {
+    aggState
+  } else {
+    where(toProcess) {
+      [] =>
+        aggState
+
+      [a, ...z] =>
+        where(process(aggState, a)) {
+          #[stop, upState] =>
+            walker(stop, upState, z)
+        }
+    }
+  }
+  return walker(false, state, flags)
+}
+parseArgs = pipe(
+  EFlags.parseFlags,
+  Ensign.validate(FLAGS),
+  Either.mapLeft(EPrint.printIssues),
+)
+captureTheFlag :: ClownState -> Flag -> #[Boolean, ClownState]
+export captureTheFlag = (state, flag) => where(flag) {
+  EFlags.Flag(k, v) =>
+    if (k == "madlib-json") {
+      #[true, { ...state, madlibJson: v }]
+    } else if (k == "input") {
+      #[false, { ...state, input: Just(v) }]
+    } else if (k == "output") {
+      #[false, { ...state, output: Just(v) }]
+    } else {
+      #[false, state]
+    }
+
+  EFlags.FlagToggle(k, v) =>
+    if (k == "help") {
+      #[true, { ...state, showHelp: true }]
+    } else if (k == "color") {
+      #[false, { ...state, useColor: v }]
+    } else {
+      #[false, state]
+    }
+}
+writeOut = (src, outPath, madlibJson) => pipe(
+  MadlibJson.readAndParse,
+  chain(
+    (json) => pipe(
+      ClownCar.applySpiritGumWithRules(json),
+      outPath,
+    )(src),
+  ),
+)(madlibJson)
+fillfull = Wish.fulfill(
   (bad) => {
-    IO.pTrace(badMsg, bad)
+    IO.putLine(bad)
+    IO.put(renderHelp(false, FLAGS))
   },
   (good) => {
-    IO.putLine(String.join("\n", good))
+    IO.put(good)
   },
-  wish,
 )
-
 main = (args) => {
   pipe(
-    MadlibJson.readAndParse,
-    chain(
-      (json) => pipe(
-        _List.chop(1),
-        map(
-          (src) => pipe(
-            ClownCar.applySpiritGumWithRules(json),
-            _File.writeDynamicName(src),
-          )(src),
-        ),
-        Wish.parallel,
-      )(args),
-    ),
-    fillfull("Barf!"),
-  )("./madlib.json")
+    List.drop(1),
+    parseArgs,
+    map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
+    where {
+      Right({ input, madlibJson, output }) =>
+        where(#[input, output]) {
+          #[Just(src), Just(out)] =>
+            writeOut(src, _File.write(out), madlibJson)
+
+          #[Just(src), _] =>
+            writeOut(src, _File.writeDynamicName(src), madlibJson)
+
+          _ =>
+            Wish.bad("--input is required")
+        }
+
+      Left(why) =>
+        Wish.bad(why)
+    },
+    fillfull,
+  )(args)
 }
