@@ -1,0 +1,53 @@
+import IO from "IO"
+import { Just, Nothing } from "Maybe"
+
+import Interpreter from "utter/Interpreter"
+import Machine from "utter/Machine"
+import State from "utter/State"
+import Transition from "utter/Transition"
+import { Action } from "utter/Types"
+
+import { EVENTS, INITIAL_STATE, STATES } from "@/State"
+import GUARDS from "@/State/Guards"
+import REDUCERS from "@/State/Reducers"
+
+
+
+announceWith = (k) => Action(
+  (e, mPay, control, mCtx) => {
+    IO.pTrace((k ?? "") ++ "event: (" ++ e ++ ")", mPay)
+  },
+)
+announce = announceWith(Nothing)
+ACTIONS = [announce]
+clowncarMachine = Machine.create(
+  "clown-car",
+  [
+    State.create(
+      STATES.initial,
+      [Transition.createComplex(EVENTS.initialize, STATES.configuration, ACTIONS, [], [])],
+    ),
+    State.create(
+      STATES.configuration,
+      [
+        Transition.createComplex(
+          EVENTS.readFlags,
+          STATES.configuration,
+          ACTIONS,
+          [GUARDS.noConfiguration],
+          [REDUCERS.setFlags],
+        ),
+        Transition.createComplex(
+          EVENTS.readFlags,
+          STATES.configuration,
+          ACTIONS,
+          [GUARDS.hasConfiguration],
+          [REDUCERS.processState],
+        ),
+      ],
+    ),
+    State.createFinal(STATES.failure),
+    State.createFinal(STATES.success),
+  ],
+)
+clowncarService = Interpreter.create(Just(INITIAL_STATE), clowncarMachine)

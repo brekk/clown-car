@@ -1,21 +1,14 @@
 import type { Maybe } from "Maybe"
-import type { Wish } from "Wish"
 
-import type { Flag } from "ensign"
-import type { MadlibDotJson } from "mad-at-json"
 import type { Controller } from "utter/Types"
 
-import IO from "IO"
-import { Just, Nothing } from "Maybe"
-import Random from "Random"
-import Wish from "Wish"
+import List from "List"
+import { Just, Nothing, isJust } from "Maybe"
+import String from "String"
 
-import Guard from "utter/Guard"
 import Interpreter from "utter/Interpreter"
-import Machine from "utter/Machine"
 import State from "utter/State"
-import Transition from "utter/Transition"
-import { Action, Controller, Reducer } from "utter/Types"
+import { Controller } from "utter/Types"
 
 
 
@@ -29,6 +22,8 @@ export STATES = {
 export alias ClownState = {
   active :: String,
   bases :: List #[String, String],
+  configured :: Boolean,
+  failure :: Maybe String,
   input :: Maybe String,
   madlibJson :: String,
   output :: Maybe String,
@@ -37,6 +32,7 @@ export alias ClownState = {
 }
 INITIAL_STATE :: ClownState
 export INITIAL_STATE = {
+  failure: Nothing,
   active: "",
   bases: [],
   input: Nothing,
@@ -44,22 +40,34 @@ export INITIAL_STATE = {
   output: Nothing,
   showHelp: false,
   useColor: true,
+  configured: false,
 }
-// captureTheFlag :: GameState -> Flag -> #[Boolean, GameState]
-
-
-type ClownCarPayload
-  = EventSetFlags(List Flag)
+stringRef = (def, a, b) => String.isEmpty(b.madlibJson)
+  ? b.madlibJson
+  : String.isEmpty(a.madlibJson) ? a.madlibJson : def
+maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
+mergeStates :: ClownState -> ClownState -> ClownState
+export mergeStates = (a, b) => (
+  {
+    failure: maybeRef(a.failure, b.failure),
+    active: stringRef("", a, b),
+    bases: List.concat(a.bases, b.bases),
+    input: maybeRef(a.input, b.input),
+    madlibJson: stringRef("./madlib.json", a, b),
+    output: maybeRef(a.output, b.output),
+    showHelp: b.showHelp || a.showHelp,
+    useColor: b.useColor || a.useColor,
+    configured: b.configured || a.configured,
+  }
+)
+export type ClownCarPayload
+  = EventSetArgs(List String)
   | EventInitialize
   | EventProcessing
   | EventFailure
   | EventSuccess
-alias ClownCarControl = Controller ClownCarPayload ClownState
-alias OutsideInfluence = ClownCarControl -> ClownCarControl
-stateName = pipe(
-  Interpreter.state,
-  map(State.name),
-)
+export alias ClownCarControl = Controller ClownCarPayload ClownState
+export alias OutsideInfluence = ClownCarControl -> ClownCarControl
 export alias HiddenController = {
   get :: {} -> ClownCarControl,
   send :: OutsideInfluence -> ClownCarControl,
@@ -81,62 +89,3 @@ export permaloop = (ctrl) => {
   hidden = { send, get: () => command }
   return hidden
 }
-announceWith = (k) => Action(
-  (e, mPay, control, mCtx) => {
-    IO.pTrace((k ?? "") ++ "event: (" ++ e ++ ")", mPay)
-  },
-)
-announce = announceWith(Nothing)
-ACTIONS = [announce]
-hasConfiguration = Guard.create(
-  (ev, pay, mCtx) => where(mCtx) {
-    Just({ configured }) =>
-      configured
-
-    _ =>
-      false
-  },
-)
-GUARDS = { hasConfiguration, noConfiguration: Guard.invert(hasConfiguration) }
-processState = Reducer((ev, pay, mCtx) => mCtx)
-setFlags = Reducer(
-  (ev, pay, mCtx) => where(#[pay, mCtx]) {
-    #[EventSetFlags(flags), Just(ctx)] =>
-      Just({ ...ctx, flags, configured: true })
-
-    _ =>
-      mCtx
-  },
-)
-REDUCERS = { setFlags, processState }
-clowncarMachine = Machine.create(
-  "clown-car",
-  [
-    State.create(
-      STATES.initial,
-      [Transition.createComplex(EVENTS.initialize, STATES.configuration, ACTIONS, [], [])],
-    ),
-    State.create(
-      STATES.configuration,
-      [
-        Transition.createComplex(
-          EVENTS.readFlags,
-          STATES.configuration,
-          ACTIONS,
-          [GUARDS.noConfiguration],
-          [REDUCERS.setFlags],
-        ),
-        Transition.createComplex(
-          EVENTS.readFlags,
-          STATES.configuration,
-          ACTIONS,
-          [GUARDS.hasConfiguration],
-          [REDUCERS.processState],
-        ),
-      ],
-    ),
-    State.createFinal(STATES.failure),
-    State.createFinal(STATES.success),
-  ],
-)
-clowncarService = Interpreter.create(Just(INITIAL_STATE), clowncarMachine)

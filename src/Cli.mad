@@ -1,27 +1,21 @@
 import type { Flag } from "ensign/Flags"
-import type { MadlibDotJson } from "mad-at-json"
 
 import type { ClownState } from "@/State"
 
 import { Left, Right } from "Either"
 import Either from "Either"
-import File from "File"
-import Fn from "Function"
 import IO from "IO"
 import List from "List"
-import { Just, Nothing } from "Maybe"
-import String from "String"
+import { Just } from "Maybe"
 import Wish from "Wish"
 
 import Ensign from "ensign/Declared"
 import Declared from "ensign/Declared/Flags"
 import EPrint from "ensign/Declared/Print"
 import EFlags from "ensign/Flags"
-import MadAtJson from "mad-at-json"
 
 import ClownCar from "@/ClownCar"
 import _File from "@/File"
-import _List from "@/List"
 import MadlibJson from "@/MadlibJson"
 import State from "@/State"
 
@@ -113,27 +107,28 @@ fillfull = Wish.fulfill(
     IO.put(good)
   },
 )
-main = (args) => {
-  pipe(
-    List.drop(1),
-    parseArgs,
-    map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
-    where {
-      Right({ input, madlibJson, output }) =>
-        where(#[input, output]) {
-          #[Just(src), Just(out)] =>
-            writeOut(src, _File.write(out), madlibJson)
+export consumeFlags = pipe(
+  parseArgs,
+  map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
+)
+export processArgs = pipe(
+  List.drop(1),
+  consumeFlags,
+  where {
+    Right({ input, madlibJson, output }) =>
+      where(#[input, output]) {
+        #[Just(src), Just(out)] =>
+          writeOut(src, _File.write(out), madlibJson)
 
-          #[Just(src), _] =>
-            writeOut(src, _File.writeDynamicName(src), madlibJson)
+        #[Just(src), _] =>
+          writeOut(src, _File.writeDynamicName(src), madlibJson)
 
-          _ =>
-            Wish.bad("--input is required")
-        }
+        _ =>
+          Wish.bad("--input is required")
+      }
 
-      Left(why) =>
-        Wish.bad(why)
-    },
-    fillfull,
-  )(args)
-}
+    Left(why) =>
+      Wish.bad(why)
+  },
+  fillfull,
+)

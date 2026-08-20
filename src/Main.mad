@@ -1,0 +1,7 @@
+import Cli from "@/Cli"
+
+
+
+main = (args) => {
+  Cli.processArgs(args)
+}

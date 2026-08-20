@@ -1,0 +1,19 @@
+import { Just } from "Maybe"
+
+import { Reducer } from "utter/Types"
+
+import { consumeFlags } from "@/Cli"
+import { EventSetArgs } from "@/State"
+
+
+
+export processState = Reducer((ev, pay, mCtx) => mCtx)
+export setFlags = Reducer(
+  (ev, pay, mCtx) => where(#[pay, mCtx]) {
+    #[EventSetArgs(args), Just(ctx)] =>
+      Just(mergeStates(ctx, { ...consumeFlags(args), configured: true }))
+
+    _ =>
+      mCtx
+  },
+)
