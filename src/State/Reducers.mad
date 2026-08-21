@@ -1,4 +1,5 @@
 import { Left, Right } from "Either"
+import IO from "IO"
 import { Just } from "Maybe"
 
 import { Reducer } from "utter/Types"
@@ -12,12 +13,15 @@ export processState = Reducer((ev, pay, mCtx) => mCtx)
 export parseArgs = Reducer(
   (ev, pay, mCtx) => where(#[pay, mCtx]) {
     #[EventSetArgs(args), Just(ctx)] =>
-      where(consumeFlags(args)) {
+      where(IO.pTrace("BARF", consumeFlags(args))) {
         Right(processedCtx) =>
-          Just(mergeStates(ctx, processedCtx))
+          IO.pTrace(
+            "____",
+            Just({ ...mergeStates(ctx, IO.pTrace("HHUHUH", processedCtx)), processed: true }),
+          )
 
         Left(why) =>
-          Just({ ...ctx, failure: Just(why) })
+          Just({ ...ctx, failure: Just(why), processed: true })
       }
 
     _ =>

@@ -16,13 +16,14 @@ SIGNAL = {
   ),
 }
 mainRaw = (args) => {
-  Cli.processArgs(args)
+  pipe(
+    Cli.processArgs,
+    Cli.fillfull,
+  )(args)
 }
 main = (args) => {
   pipe(
-    List.drop(1),
     SIGNAL.initialize,
     Machine.clowncarServer.send,
-    // Machine.clowncarServer.send,
   )(args)
 }

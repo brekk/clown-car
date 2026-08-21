@@ -8,13 +8,14 @@ import Transition from "utter/Transition"
 import { Action } from "utter/Types"
 
 import { EVENTS, INITIAL_STATE, STATES, permaloop } from "@/State"
+import CONTROLLERS from "@/State/ActionControllers"
 import GUARDS from "@/State/Guards"
 import REDUCERS from "@/State/Reducers"
 
 
 
 announceWith = (k) => Action(
-  (e, mPay, control, mCtx) => {
+  (e, mPay, mCtx) => {
     IO.pTrace((k ?? "") ++ "event: (" ++ e ++ ")", mPay)
   },
 )
@@ -32,6 +33,7 @@ clowncarMachine = Machine.create(
           ACTIONS,
           [],
           [REDUCERS.parseArgs],
+          [CONTROLLERS.proceedToConfig],
         ),
       ],
     ),
@@ -42,24 +44,27 @@ clowncarMachine = Machine.create(
           EVENTS.processArgs,
           STATES.configuration,
           ACTIONS,
-          [GUARDS.noJsonSet, GUARDS.inputUnprocessed],
+          [GUARDS.inputUnprocessed],
+          [],
           [],
         ),
         Transition.createComplex(
           EVENTS.readJson,
           STATES.configuration,
           ACTIONS,
-          [GUARDS.noJsonSet, GUARDS.inputUnprocessed],
+          [GUARDS.inputUnprocessed],
+          [],
           [],
         ),
         Transition.createComplex(
           EVENTS.convertedInput,
           STATES.success,
           ACTIONS,
-          [GUARDS.jsonSet, GUARDS.inputUnprocessed],
+          [GUARDS.inputUnprocessed],
+          [],
           [],
         ),
-        Transition.createComplex(EVENTS.failedToConvert, STATES.failure, ACTIONS, [], []),
+        Transition.createComplex(EVENTS.failedToConvert, STATES.failure, ACTIONS, [], [], []),
       ],
     ),
     State.createFinal(STATES.failure),

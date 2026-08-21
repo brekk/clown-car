@@ -98,7 +98,7 @@ writeOut = (jsonPath, src, outPath) => pipe(
     )(src),
   ),
 )(jsonPath)
-fillfull = Wish.fulfill(
+export fillfull = Wish.fulfill(
   (bad) => {
     IO.putLine(bad)
     IO.put(renderHelp(false, FLAGS))
@@ -108,27 +108,27 @@ fillfull = Wish.fulfill(
   },
 )
 export consumeFlags = pipe(
+  List.drop(1),
   parseArgs,
   map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
 )
+export applyClownCar = where {
+  Right({ input, madlibJsonPath, output }) =>
+    where(#[input, output]) {
+      #[Just(src), Just(out)] =>
+        writeOut(madlibJsonPath, src, _File.write(out))
+
+      #[Just(src), _] =>
+        writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
+
+      _ =>
+        Wish.bad("--input is required")
+    }
+
+  Left(why) =>
+    Wish.bad(why)
+}
 export processArgs = pipe(
-  List.drop(1),
   consumeFlags,
-  where {
-    Right({ input, madlibJsonPath, output }) =>
-      where(#[input, output]) {
-        #[Just(src), Just(out)] =>
-          writeOut(madlibJsonPath, src, _File.write(out))
-
-        #[Just(src), _] =>
-          writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
-
-        _ =>
-          Wish.bad("--input is required")
-      }
-
-    Left(why) =>
-      Wish.bad(why)
-  },
-  fillfull,
+  applyClownCar,
 )

@@ -1,0 +1,43 @@
+import type { ActionController, Controller } from "utter/Types"
+
+import IO from "IO"
+import { Just, Nothing } from "Maybe"
+
+import AC from "utter/ActionController"
+import Interpreter from "utter/Interpreter"
+import { ActionController, Controller } from "utter/Types"
+
+import { EVENTS } from "@/State"
+
+
+
+export proceedToConfig = ActionController(
+  (ctrl, ev, pay, mCtx) => where(ctrl) {
+    Controller(mCtx2, mch, Just(state), run) =>
+      where(mCtx2) {
+        Just(ctx) =>
+          Interpreter.send(EVENTS.processArgs, IO.pTrace("XXKXKX", pay), ctrl)
+
+        _ =>
+          ctrl
+      }
+
+    _ =>
+      ctrl
+  },
+)
+export proceedToReadJSON = ActionController(
+  (ctrl, ev, pay, mCtx) => where(ctrl) {
+    Controller(mCtx2, mch, Just(state), run) =>
+      where(mCtx2) {
+        Just(ctx) =>
+          Interpreter.send(EVENTS.readJson, pay, ctrl)
+
+        _ =>
+          ctrl
+      }
+
+    _ =>
+      ctrl
+  },
+)

@@ -14,20 +14,10 @@ export hasConfiguration = Guard.create(
   },
 )
 export noConfiguration = Guard.invert(hasConfiguration)
-export jsonSet = Guard.create(
-  (_, _, mCtx) => where(mCtx) {
-    Just({ madlibJson }) =>
-      isJust(madlibJson)
-
-    _ =>
-      false
-  },
-)
-export noJsonSet = Guard.invert(jsonSet)
 export inputProcessed = Guard.create(
   (_, _, mCtx) => where(mCtx) {
-    Just({ madlibJson }) =>
-      isJust(madlibJson)
+    Just({ processed }) =>
+      processed
 
     _ =>
       false
