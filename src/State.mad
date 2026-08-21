@@ -1,18 +1,27 @@
 import type { Maybe } from "Maybe"
+import type { Wish } from "Wish"
 
 import type { Controller } from "utter/Types"
 
+import IO from "IO"
 import List from "List"
 import { Just, Nothing, isJust } from "Maybe"
 import String from "String"
+import Wish from "Wish"
 
 import Interpreter from "utter/Interpreter"
 import State from "utter/State"
-import { Controller } from "utter/Types"
+import { Controller, Machine } from "utter/Types"
 
 
 
-export EVENTS = { initialize: "initialize", readFlags: "readFlags" }
+export EVENTS = {
+  initialize: "initialize",
+  processArgs: "processArgs",
+  readJson: "readMadlibJson",
+  convertedInput: "convertedInput",
+  failedToConvert: "failedToConvert",
+}
 export STATES = {
   initial: "initial",
   configuration: "configuration",
@@ -25,8 +34,10 @@ export alias ClownState = {
   configured :: Boolean,
   failure :: Maybe String,
   input :: Maybe String,
-  madlibJson :: String,
+  madlibJson :: Maybe (Wish String String),
+  madlibJsonPath :: String,
   output :: Maybe String,
+  processed :: Boolean,
   showHelp :: Boolean,
   useColor :: Boolean,
 }
@@ -36,33 +47,35 @@ export INITIAL_STATE = {
   active: "",
   bases: [],
   input: Nothing,
-  madlibJson: "./madlib.json",
+  madlibJsonPath: "./madlib.json",
+  madlibJson: Nothing,
   output: Nothing,
   showHelp: false,
   useColor: true,
   configured: false,
+  processed: false,
 }
-stringRef = (def, a, b) => String.isEmpty(b.madlibJson)
-  ? b.madlibJson
-  : String.isEmpty(a.madlibJson) ? a.madlibJson : def
+stringRef = (def, a, b) => String.isEmpty(b) ? b : String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
 mergeStates :: ClownState -> ClownState -> ClownState
 export mergeStates = (a, b) => (
   {
     failure: maybeRef(a.failure, b.failure),
-    active: stringRef("", a, b),
+    active: stringRef("", a.active, b.active),
     bases: List.concat(a.bases, b.bases),
     input: maybeRef(a.input, b.input),
-    madlibJson: stringRef("./madlib.json", a, b),
+    madlibJsonPath: stringRef("./madlib.json", a.madlibJsonPath, b.madlibJsonPath),
+    madlibJson: b.madlibJson,
     output: maybeRef(a.output, b.output),
     showHelp: b.showHelp || a.showHelp,
     useColor: b.useColor || a.useColor,
     configured: b.configured || a.configured,
+    processed: b.processed || a.processed,
   }
 )
 export type ClownCarPayload
   = EventSetArgs(List String)
-  | EventInitialize
+  | EventSetMadlibJson(String)
   | EventProcessing
   | EventFailure
   | EventSuccess
@@ -72,6 +85,9 @@ export alias HiddenController = {
   get :: {} -> ClownCarControl,
   send :: OutsideInfluence -> ClownCarControl,
 }
+stateName = pipe(
+  Interpreter.machine,
+)
 permaloop :: ClownCarControl -> HiddenController
 export permaloop = (ctrl) => {
   iter = 0
@@ -81,7 +97,6 @@ export permaloop = (ctrl) => {
     iter := iter + 1
     command := pipe(
       run,
-      // Log.tapped.loop("update " ++ show(iter) ++ ": ", stateName),
     )(command)
     return command
   }

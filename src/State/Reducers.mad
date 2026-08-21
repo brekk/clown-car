@@ -1,17 +1,24 @@
+import { Left, Right } from "Either"
 import { Just } from "Maybe"
 
 import { Reducer } from "utter/Types"
 
 import { consumeFlags } from "@/Cli"
-import { EventSetArgs } from "@/State"
+import { EventSetArgs, mergeStates } from "@/State"
 
 
 
 export processState = Reducer((ev, pay, mCtx) => mCtx)
-export setFlags = Reducer(
+export parseArgs = Reducer(
   (ev, pay, mCtx) => where(#[pay, mCtx]) {
     #[EventSetArgs(args), Just(ctx)] =>
-      Just(mergeStates(ctx, { ...consumeFlags(args), configured: true }))
+      where(consumeFlags(args)) {
+        Right(processedCtx) =>
+          Just(mergeStates(ctx, processedCtx))
+
+        Left(why) =>
+          Just({ ...ctx, failure: Just(why) })
+      }
 
     _ =>
       mCtx

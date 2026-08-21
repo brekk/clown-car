@@ -1,27 +1,11 @@
-import type { Maybe } from "Maybe"
-import type { Wish } from "Wish"
+import { Just, isJust } from "Maybe"
 
-import type { Flag } from "ensign"
-import type { MadlibDotJson } from "mad-at-json"
-import type { Controller } from "utter/Types"
-
-import IO from "IO"
-import { Just, Nothing } from "Maybe"
-import Random from "Random"
-import Wish from "Wish"
-
-import Ensign from "utter/Declared"
 import Guard from "utter/Guard"
-import Interpreter from "utter/Interpreter"
-import Machine from "utter/Machine"
-import State from "utter/State"
-import Transition from "utter/Transition"
-import { Action, Controller, Reducer } from "utter/Types"
 
 
 
 export hasConfiguration = Guard.create(
-  (ev, pay, mCtx) => where(mCtx) {
+  (_, _, mCtx) => where(mCtx) {
     Just({ configured }) =>
       configured
 
@@ -30,3 +14,23 @@ export hasConfiguration = Guard.create(
   },
 )
 export noConfiguration = Guard.invert(hasConfiguration)
+export jsonSet = Guard.create(
+  (_, _, mCtx) => where(mCtx) {
+    Just({ madlibJson }) =>
+      isJust(madlibJson)
+
+    _ =>
+      false
+  },
+)
+export noJsonSet = Guard.invert(jsonSet)
+export inputProcessed = Guard.create(
+  (_, _, mCtx) => where(mCtx) {
+    Just({ madlibJson }) =>
+      isJust(madlibJson)
+
+    _ =>
+      false
+  },
+)
+export inputUnprocessed = Guard.invert(inputProcessed)

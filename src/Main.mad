@@ -1,7 +1,28 @@
+import IO from "IO"
+import List from "List"
+
+import Interpreter from "utter/Interpreter"
+
 import Cli from "@/Cli"
+import { EVENTS, EventSetArgs } from "@/State"
+import Machine from "@/State/Machine"
 
 
 
-main = (args) => {
+SIGNAL = {
+  initialize: pipe(
+    EventSetArgs,
+    Interpreter.send(EVENTS.initialize),
+  ),
+}
+mainRaw = (args) => {
   Cli.processArgs(args)
+}
+main = (args) => {
+  pipe(
+    List.drop(1),
+    SIGNAL.initialize,
+    Machine.clowncarServer.send,
+    // Machine.clowncarServer.send,
+  )(args)
 }

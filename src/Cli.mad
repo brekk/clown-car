@@ -71,7 +71,7 @@ captureTheFlag :: ClownState -> Flag -> #[Boolean, ClownState]
 export captureTheFlag = (state, flag) => where(flag) {
   EFlags.Flag(k, v) =>
     if (k == "madlib-json") {
-      #[true, { ...state, madlibJson: v }]
+      #[true, { ...state, madlibJsonPath: v }]
     } else if (k == "input") {
       #[false, { ...state, input: Just(v) }]
     } else if (k == "output") {
@@ -89,7 +89,7 @@ export captureTheFlag = (state, flag) => where(flag) {
       #[false, state]
     }
 }
-writeOut = (src, outPath, madlibJson) => pipe(
+writeOut = (jsonPath, src, outPath) => pipe(
   MadlibJson.readAndParse,
   chain(
     (json) => pipe(
@@ -97,7 +97,7 @@ writeOut = (src, outPath, madlibJson) => pipe(
       outPath,
     )(src),
   ),
-)(madlibJson)
+)(jsonPath)
 fillfull = Wish.fulfill(
   (bad) => {
     IO.putLine(bad)
@@ -115,13 +115,13 @@ export processArgs = pipe(
   List.drop(1),
   consumeFlags,
   where {
-    Right({ input, madlibJson, output }) =>
+    Right({ input, madlibJsonPath, output }) =>
       where(#[input, output]) {
         #[Just(src), Just(out)] =>
-          writeOut(src, _File.write(out), madlibJson)
+          writeOut(madlibJsonPath, src, _File.write(out))
 
         #[Just(src), _] =>
-          writeOut(src, _File.writeDynamicName(src), madlibJson)
+          writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
 
         _ =>
           Wish.bad("--input is required")
