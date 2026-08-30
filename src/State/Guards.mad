@@ -1,10 +1,11 @@
+import IO from "IO"
 import { Just, isJust } from "Maybe"
 
 import Guard from "utter/Guard"
 
 
 
-export hasConfiguration = Guard.create(
+export _hasConfiguration = Guard.create(
   (_, _, mCtx) => where(mCtx) {
     Just({ configured }) =>
       configured
@@ -13,14 +14,17 @@ export hasConfiguration = Guard.create(
       false
   },
 )
-export noConfiguration = Guard.invert(hasConfiguration)
+export _noConfiguration = Guard.invert(_hasConfiguration)
 export inputProcessed = Guard.create(
-  (_, _, mCtx) => where(mCtx) {
-    Just({ processed }) =>
-      processed
+  (ev, _, mCtx) => IO.pTrace(
+    "checking: " ++ ev,
+    where(mCtx) {
+      Just({ processed }) =>
+        processed
 
-    _ =>
-      false
-  },
+      _ =>
+        false
+    },
+  ),
 )
 export inputUnprocessed = Guard.invert(inputProcessed)

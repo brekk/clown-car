@@ -1,7 +1,7 @@
 import type { Maybe } from "Maybe"
 import type { Wish } from "Wish"
 
-import type { Controller } from "utter/Types"
+import type { Controller } from "utter"
 
 import IO from "IO"
 import List from "List"
@@ -9,9 +9,9 @@ import { Just, Nothing, isJust } from "Maybe"
 import String from "String"
 import Wish from "Wish"
 
+import { Controller, Machine } from "utter"
 import Interpreter from "utter/Interpreter"
 import State from "utter/State"
-import { Controller, Machine } from "utter/Types"
 
 
 
@@ -19,7 +19,7 @@ export EVENTS = {
   initialize: "initialize",
   processArgs: "processArgs",
   readJson: "readMadlibJson",
-  convertedInput: "convertedInput",
+  convertInput: "convertedInput",
   failedToConvert: "failedToConvert",
 }
 export STATES = {
@@ -31,12 +31,14 @@ export STATES = {
 export alias ClownState = {
   active :: String,
   bases :: List #[String, String],
+  clowned :: Boolean,
   configured :: Boolean,
   failure :: Maybe String,
   input :: Maybe String,
   madlibJsonPath :: String,
   output :: Maybe String,
   processed :: Boolean,
+  results :: Wish String String,
   showHelp :: Boolean,
   useColor :: Boolean,
 }
@@ -52,12 +54,15 @@ export INITIAL_STATE = {
   useColor: true,
   configured: false,
   processed: false,
+  clowned: false,
+  results: Wish.bad("Unprocessed"),
 }
 stringRef = (def, a, b) => String.isEmpty(b) ? b : String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
 mergeStates :: ClownState -> ClownState -> ClownState
 export mergeStates = (a, b) => (
   {
+    clowned: b.clowned || a.clowned,
     failure: maybeRef(a.failure, b.failure),
     active: stringRef("", a.active, b.active),
     bases: List.concat(a.bases, b.bases),
@@ -69,6 +74,7 @@ export mergeStates = (a, b) => (
     useColor: b.useColor || a.useColor,
     configured: b.configured || a.configured,
     processed: b.processed || a.processed,
+    results: b.results,
   }
 )
 export type ClownCarPayload

@@ -1,10 +1,12 @@
 import { Left, Right } from "Either"
 import IO from "IO"
 import { Just } from "Maybe"
+import Wish from "Wish"
 
-import { Reducer } from "utter/Types"
+import { Reducer } from "utter"
 
-import { consumeFlags } from "@/Cli"
+import Cli from "@/Cli"
+import { EventProcessing } from "@/State"
 import { EventSetArgs, mergeStates } from "@/State"
 
 
@@ -13,12 +15,9 @@ export processState = Reducer((ev, pay, mCtx) => mCtx)
 export parseArgs = Reducer(
   (ev, pay, mCtx) => where(#[pay, mCtx]) {
     #[EventSetArgs(args), Just(ctx)] =>
-      where(IO.pTrace("BARF", consumeFlags(args))) {
+      where(Cli.consumeFlags(args)) {
         Right(processedCtx) =>
-          IO.pTrace(
-            "____",
-            Just({ ...mergeStates(ctx, IO.pTrace("HHUHUH", processedCtx)), processed: true }),
-          )
+          Just({ ...mergeStates(ctx, processedCtx), processed: true })
 
         Left(why) =>
           Just({ ...ctx, failure: Just(why), processed: true })
@@ -28,3 +27,15 @@ export parseArgs = Reducer(
       mCtx
   },
 )
+
+/*
+export processInputWithClowncar = Reducer(
+  (ev, pay, mCtx) => where(#[pay, mCtx]) {
+    #[EventProcessing, Just(ctx)] =>
+      Just({ ...ctx, results: Right(Cli.applyClownCar(ctx)), clowned: true })
+
+    _ =>
+      mCtx
+  },
+)
+*/

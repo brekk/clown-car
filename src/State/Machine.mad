@@ -1,14 +1,13 @@
 import IO from "IO"
 import { Just, Nothing } from "Maybe"
 
+import { Action } from "utter"
 import Interpreter from "utter/Interpreter"
 import Machine from "utter/Machine"
 import State from "utter/State"
 import Transition from "utter/Transition"
-import { Action } from "utter/Types"
 
 import { EVENTS, INITIAL_STATE, STATES, permaloop } from "@/State"
-import CONTROLLERS from "@/State/ActionControllers"
 import GUARDS from "@/State/Guards"
 import REDUCERS from "@/State/Reducers"
 
@@ -26,45 +25,24 @@ clowncarMachine = Machine.create(
   [
     State.create(
       STATES.initial,
-      [
-        Transition.createComplex(
-          EVENTS.initialize,
-          STATES.configuration,
-          ACTIONS,
-          [],
-          [REDUCERS.parseArgs],
-          [CONTROLLERS.proceedToConfig],
-        ),
-      ],
+      [Transition.create(EVENTS.initialize, STATES.configuration, [announce, REDUCERS.parseArgs])],
     ),
     State.create(
       STATES.configuration,
       [
-        Transition.createComplex(
+        Transition.createImmediate(
           EVENTS.processArgs,
-          STATES.configuration,
-          ACTIONS,
-          [GUARDS.inputUnprocessed],
-          [],
-          [],
+          // STATES.configuration,
+          [announce],
         ),
-        Transition.createComplex(
-          EVENTS.readJson,
-          STATES.configuration,
-          ACTIONS,
-          [GUARDS.inputUnprocessed],
-          [],
-          [],
-        ),
-        Transition.createComplex(
-          EVENTS.convertedInput,
+        Transition.createImmediate(EVENTS.readJson, [announce, GUARDS.inputUnprocessed]),
+        Transition.createImmediate(EVENTS.processArgs, [announce, GUARDS.inputProcessed]),
+        Transition.create(
+          EVENTS.convertInput,
           STATES.success,
-          ACTIONS,
-          [GUARDS.inputUnprocessed],
-          [],
-          [],
+          [announce, GUARDS.inputProcessed/* REDUCERS.processInputWithClowncar */ ],
         ),
-        Transition.createComplex(EVENTS.failedToConvert, STATES.failure, ACTIONS, [], [], []),
+        Transition.create(EVENTS.failedToConvert, STATES.failure, ACTIONS),
       ],
     ),
     State.createFinal(STATES.failure),

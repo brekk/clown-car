@@ -4,7 +4,7 @@ import List from "List"
 import Interpreter from "utter/Interpreter"
 
 import Cli from "@/Cli"
-import { EVENTS, EventSetArgs } from "@/State"
+import { EVENTS, EventProcessing, EventSetArgs } from "@/State"
 import Machine from "@/State/Machine"
 
 
@@ -14,6 +14,7 @@ SIGNAL = {
     EventSetArgs,
     Interpreter.send(EVENTS.initialize),
   ),
+  convertInput: Interpreter.send(EVENTS.convertInput, EventProcessing),
 }
 mainRaw = (args) => {
   pipe(
@@ -25,5 +26,6 @@ main = (args) => {
   pipe(
     SIGNAL.initialize,
     Machine.clowncarServer.send,
+    SIGNAL.convertInput,
   )(args)
 }
