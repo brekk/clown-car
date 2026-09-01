@@ -25,23 +25,23 @@ clowncarMachine = Machine.create(
   [
     State.create(
       STATES.initial,
-      [Transition.create(EVENTS.initialize, STATES.configuration, [announce, REDUCERS.parseArgs])],
+      [
+        Transition.create(
+          "invokeProgram",
+          STATES.configuration,
+          [announceWith(Just("🛸 invokeProgram")), REDUCERS.parseArgs],
+        ),
+      ],
     ),
     State.create(
       STATES.configuration,
       [
+        // read flags
         Transition.createImmediate(
-          EVENTS.processArgs,
-          // STATES.configuration,
-          [announce],
+          STATES.configuration,
+          [announceWith(Just("🛸 auto configuration"))],
         ),
-        Transition.createImmediate(EVENTS.readJson, [announce, GUARDS.inputUnprocessed]),
-        Transition.createImmediate(EVENTS.processArgs, [announce, GUARDS.inputProcessed]),
-        Transition.create(
-          EVENTS.convertInput,
-          STATES.success,
-          [announce, GUARDS.inputProcessed/* REDUCERS.processInputWithClowncar */ ],
-        ),
+        Transition.create(EVENTS.convertInput, STATES.success, []),
         Transition.create(EVENTS.failedToConvert, STATES.failure, ACTIONS),
       ],
     ),

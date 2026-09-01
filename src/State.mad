@@ -10,7 +10,7 @@ import String from "String"
 import Wish from "Wish"
 
 import { Controller, Machine } from "utter"
-import Interpreter from "utter/Interpreter"
+import Interpreter from "utter/Controller"
 import State from "utter/State"
 
 
@@ -31,7 +31,6 @@ export STATES = {
 export alias ClownState = {
   active :: String,
   bases :: List #[String, String],
-  clowned :: Boolean,
   configured :: Boolean,
   failure :: Maybe String,
   input :: Maybe String,
@@ -54,7 +53,6 @@ export INITIAL_STATE = {
   useColor: true,
   configured: false,
   processed: false,
-  clowned: false,
   results: Wish.bad("Unprocessed"),
 }
 stringRef = (def, a, b) => String.isEmpty(b) ? b : String.isEmpty(a) ? a : def
@@ -62,7 +60,6 @@ maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
 mergeStates :: ClownState -> ClownState -> ClownState
 export mergeStates = (a, b) => (
   {
-    clowned: b.clowned || a.clowned,
     failure: maybeRef(a.failure, b.failure),
     active: stringRef("", a.active, b.active),
     bases: List.concat(a.bases, b.bases),

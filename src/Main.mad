@@ -1,7 +1,7 @@
 import IO from "IO"
 import List from "List"
 
-import Interpreter from "utter/Interpreter"
+import Interpreter from "utter/Controller"
 
 import Cli from "@/Cli"
 import { EVENTS, EventProcessing, EventSetArgs } from "@/State"
