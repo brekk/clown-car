@@ -88,6 +88,9 @@ export captureTheFlag = (state, flag) => where(flag) {
     } else {
       #[false, state]
     }
+
+  EFlags.InvalidFlag =>
+    #[true, { ...state, failure: Just("Passed invalid flags") }]
 }
 writeOut = (jsonPath, src, outPath) => pipe(
   MadlibJson.readAndParse,

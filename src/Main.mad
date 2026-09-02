@@ -26,6 +26,9 @@ main = (args) => {
   pipe(
     SIGNAL.initialize,
     Machine.clowncarServer.send,
-    SIGNAL.convertInput,
+    Interpreter.context,
+    map(.results),
+    IO.pTrace("RAW"),
+    map(Cli.fillfull),
   )(args)
 }

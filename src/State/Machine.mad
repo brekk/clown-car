@@ -2,7 +2,7 @@ import IO from "IO"
 import { Just, Nothing } from "Maybe"
 
 import { Action } from "utter"
-import Interpreter from "utter/Interpreter"
+import Interpreter from "utter/Controller"
 import Machine from "utter/Machine"
 import State from "utter/State"
 import Transition from "utter/Transition"
@@ -15,7 +15,7 @@ import REDUCERS from "@/State/Reducers"
 
 announceWith = (k) => Action(
   (e, mPay, mCtx) => {
-    IO.pTrace((k ?? "") ++ "event: (" ++ e ++ ")", mPay)
+    IO.pTrace((k ?? "") ++ " | event: (" ++ e ++ ")", mPay)
   },
 )
 announce = announceWith(Nothing)
@@ -27,7 +27,7 @@ clowncarMachine = Machine.create(
       STATES.initial,
       [
         Transition.create(
-          "invokeProgram",
+          EVENTS.initialize,
           STATES.configuration,
           [announceWith(Just("🛸 invokeProgram")), REDUCERS.parseArgs],
         ),
@@ -39,10 +39,20 @@ clowncarMachine = Machine.create(
         // read flags
         Transition.createImmediate(
           STATES.configuration,
-          [announceWith(Just("🛸 auto configuration"))],
+          [
+            announceWith(Just("🛸 auto configuration")),
+            REDUCERS.processConfiguration,
+            GUARDS.noFailure,
+          ],
         ),
-        Transition.create(EVENTS.convertInput, STATES.success, []),
-        Transition.create(EVENTS.failedToConvert, STATES.failure, ACTIONS),
+        Transition.createImmediate(
+          STATES.success,
+          [announceWith(Just("SKKS")), GUARDS.isConfigured, GUARDS.noFailure],
+        ),
+        Transition.createImmediate(
+          STATES.failure,
+          [announceWith(Just("BARFO")), GUARDS.hasFailure],
+        ),
       ],
     ),
     State.createFinal(STATES.failure),

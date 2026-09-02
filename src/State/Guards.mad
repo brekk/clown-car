@@ -5,7 +5,7 @@ import Guard from "utter/Guard"
 
 
 
-export _hasConfiguration = Guard.create(
+export isConfigured = Guard.create(
   (_, _, mCtx) => where(mCtx) {
     Just({ configured }) =>
       configured
@@ -14,7 +14,7 @@ export _hasConfiguration = Guard.create(
       false
   },
 )
-export _noConfiguration = Guard.invert(_hasConfiguration)
+export notConfigured = Guard.invert(isConfigured)
 export inputProcessed = Guard.create(
   (ev, _, mCtx) => IO.pTrace(
     "checking: " ++ ev,
@@ -28,3 +28,16 @@ export inputProcessed = Guard.create(
   ),
 )
 export inputUnprocessed = Guard.invert(inputProcessed)
+export hasFailure = Guard.create(
+  (ev, _, mCtx) => IO.pTrace(
+    "checking: " ++ ev,
+    where(mCtx) {
+      Just({ failure }) =>
+        isJust(failure)
+
+      _ =>
+        false
+    },
+  ),
+)
+export noFailure = Guard.invert(hasFailure)

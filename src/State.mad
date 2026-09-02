@@ -9,8 +9,9 @@ import { Just, Nothing, isJust } from "Maybe"
 import String from "String"
 import Wish from "Wish"
 
-import { Controller, Machine } from "utter"
+import Utter from "utter"
 import Interpreter from "utter/Controller"
+import Machine from "utter/Machine"
 import State from "utter/State"
 
 
@@ -98,6 +99,16 @@ export permaloop = (ctrl) => {
     iter := iter + 1
     command := pipe(
       run,
+      (x) => {
+        IO.pTrace(
+          "(" ++ show(iter) ++ ")",
+          pipe(
+            Interpreter.state,
+            map(State.name),
+          )(x),
+        )
+        return x
+      },
     )(command)
     return command
   }
