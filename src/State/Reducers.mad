@@ -17,10 +17,11 @@ export parseArgs = Reducer(
     #[EventSetArgs(args), Just(ctx)] =>
       where(Cli.consumeFlags(args)) {
         Right(processedCtx) =>
-          IO.pTrace(
-            "reducer.parseArgs",
-            Just({ ...mergeStates(ctx, processedCtx), configured: true }),
-          )
+          // IO.pTrace(
+          //   "reducer.parseArgs",
+          Just({ ...mergeStates(ctx, processedCtx), configured: true })
+
+        // )
 
         Left(why) =>
           Just({ ...ctx, failure: Just(why), configured: true })
@@ -37,7 +38,6 @@ export processConfiguration = Reducer(
         processMe = pipe(
           Right,
           Cli.applyClownCar,
-          IO.pTrace("@@@"),
         )(ctx)
 
         return Just({ ...ctx, results: processMe, processed: true })

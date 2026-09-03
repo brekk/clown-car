@@ -29,7 +29,10 @@ clowncarMachine = Machine.create(
         Transition.create(
           EVENTS.initialize,
           STATES.configuration,
-          [announceWith(Just("🛸 invokeProgram")), REDUCERS.parseArgs],
+          [
+            // announceWith(Just("🛸 invokeProgram")),
+            REDUCERS.parseArgs,
+          ],
         ),
       ],
     ),
@@ -40,18 +43,25 @@ clowncarMachine = Machine.create(
         Transition.createImmediate(
           STATES.configuration,
           [
-            announceWith(Just("🛸 auto configuration")),
+            // announceWith(Just("🛸 auto configuration")),
             REDUCERS.processConfiguration,
             GUARDS.noFailure,
           ],
         ),
         Transition.createImmediate(
           STATES.success,
-          [announceWith(Just("SKKS")), GUARDS.isConfigured, GUARDS.noFailure],
+          [
+            // announceWith(Just("SKKS")),
+            GUARDS.isConfigured,
+            GUARDS.noFailure,
+          ],
         ),
         Transition.createImmediate(
           STATES.failure,
-          [announceWith(Just("BARFO")), GUARDS.hasFailure],
+          [
+            // announceWith(Just("BARFO")),
+            GUARDS.hasFailure,
+          ],
         ),
       ],
     ),

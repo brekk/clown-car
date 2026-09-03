@@ -16,28 +16,22 @@ export isConfigured = Guard.create(
 )
 export notConfigured = Guard.invert(isConfigured)
 export inputProcessed = Guard.create(
-  (ev, _, mCtx) => IO.pTrace(
-    "checking: " ++ ev,
-    where(mCtx) {
-      Just({ processed }) =>
-        processed
+  (ev, _, mCtx) => where(mCtx) {
+    Just({ processed }) =>
+      processed
 
-      _ =>
-        false
-    },
-  ),
+    _ =>
+      false
+  },
 )
 export inputUnprocessed = Guard.invert(inputProcessed)
 export hasFailure = Guard.create(
-  (ev, _, mCtx) => IO.pTrace(
-    "checking: " ++ ev,
-    where(mCtx) {
-      Just({ failure }) =>
-        isJust(failure)
+  (ev, _, mCtx) => where(mCtx) {
+    Just({ failure }) =>
+      isJust(failure)
 
-      _ =>
-        false
-    },
-  ),
+    _ =>
+      false
+  },
 )
 export noFailure = Guard.invert(hasFailure)

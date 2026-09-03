@@ -1,6 +1,3 @@
-import IO from "IO"
-import List from "List"
-
 import Interpreter from "utter/Controller"
 
 import Cli from "@/Cli"
@@ -28,7 +25,6 @@ main = (args) => {
     Machine.clowncarServer.send,
     Interpreter.context,
     map(.results),
-    IO.pTrace("RAW"),
     map(Cli.fillfull),
   )(args)
 }

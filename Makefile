@@ -7,7 +7,7 @@ DEPS := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*))
 $(BUILD_DIR)/$(EXEC): $(DEPS)
 	mkdir -p $(dir $@)
 	echo "compiling! - clown ass dad"
-	madlib compile -i src/Cli.mad -t llvm -o $@
+	madlib compile -i src/Main.mad -t llvm -o $@
 	echo "built! - clown ass dad"
 
 version.lock:

@@ -1,18 +1,13 @@
 import type { MadlibDotJson } from "mad-at-json"
-import type { VFileError } from "spirit-gum/Errors"
-import type { ConcreteFile, WishCFile } from "spirit-gum/VFile"
 
 import type { ClownState } from "@/State"
 
-import File from "File"
 import Fn from "Function"
-import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import String from "String"
 import Wish from "Wish"
 
-import MadlibJson from "mad-at-json/Parse/MadlibJson"
 import Version from "mad-at-json/Version"
 import Line from "spirit-gum/Line"
 import Rule from "spirit-gum/Rule"
