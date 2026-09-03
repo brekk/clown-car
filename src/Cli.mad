@@ -7,6 +7,7 @@ import Either from "Either"
 import IO from "IO"
 import List from "List"
 import { Just } from "Maybe"
+import Term from "Terminal"
 import Wish from "Wish"
 
 import Ensign from "ensign/Declared"
@@ -21,26 +22,62 @@ import State from "@/State"
 
 
 
-CLOWN = "🤡🚗"
+CLOWNCAR = "🤡🚗 clown-car"
 export FLAGS = [
-  Declared.flagBoolean("help", ["h"], "These helpful explanations you're reading"),
-  Declared.flagBoolean("color", ["K"], "Use color? (default: true)"),
+  Declared.flagBoolean("help", ["h"], "🧐 These helpful explanations you're reading"),
+  Declared.flagBoolean("color", ["K"], "🎨 Use color? (default: true)"),
   Declared.flagString(
     "madlib-json",
     ["madlib", "M"],
-    "Where is the madlib.json file? (default: ./madlib.json)",
+    "😈 Where is the madlib.json file? (default: ./madlib.json)",
   ),
-  Declared.flagString("input", ["i"], "Set the input for the clowncar. Required."),
+  Declared.flagString("input", ["i"], "🥺 Set the input for the clowncar. Required."),
   Declared.flagString(
     "output",
     ["o"],
-    "Set the output for the clowncar. Inferred from `--input` if not provided.",
+    "✨ Set the output for the clowncar. Inferred from `--input` if not provided.",
   ),
 ]
-renderHelp = (useColor, flags) => {
+renderHelpDeets = (bool, useColor, flags) => {
   fn = (useColor ? EPrint.printLegendWithColor : EPrint.printLegend)
-  return CLOWN ++ "\n" ++ fn(flags)
+  return CLOWNCAR
+    ++ "\n"
+    ++ "Tooling to autogenerate PartyBus logging files, from a simple format:\n"
+    ++ (
+      bool
+        ? `
+  // comments are allowed, but only single line
+  // this is the base tag value, equivalent to PartyBus.tag("bicycle")
+  ${Term.text.bold(IO.red("bicycle"))}
+  - ${
+          IO.yellow("body")
+        } // this is an implicit nested tag (so: PartyBus.tagWithScope("bicycle", ["body"]))
+  - ${IO.yellow("body")}:${
+          Term.text.cyan("fork")
+        } // this is a nested implicit tag (so: PartyBus.tagWithScope("bicycle", ["body", "fork"]) and this becomes bodyFork)
+  - ${Term.text.bold("config")} = ${
+          IO.yellow("xyz")
+        } // config = PartyBus.tagWithScope("bicycle", ["xyz"])
+  - ${Term.text.bold("ref")} = ${IO.yellow("config")}:${
+          Term.text.cyan("seat")
+        } // ref = PartyBus.tagWithScope("bicycle", ["config", "seat"])
+  - ${IO.yellow("handlebar")}
+  - ${IO.yellow("handlebar")}:${Term.text.cyan("brake")}
+  - ${IO.yellow("seat")}
+  - ${IO.yellow("wheel")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("spoke")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("tire")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("shifter")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}:${Term.text.magenta("front")}
+  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}:${Term.text.magenta("rear")}`
+          ++ "\n\n"
+        : ""
+    )
+    ++ fn(flags)
 }
+export renderHelp = renderHelpDeets(false)
+export renderHelpWithDetail = renderHelpDeets(true)
 processFlagState :: ClownState
   -> (ClownState -> Flag -> #[Boolean, ClownState])
   -> List Flag
@@ -104,7 +141,7 @@ writeOut = (jsonPath, src, outPath) => pipe(
 export fillfull = Wish.fulfill(
   (bad) => {
     IO.putLine(bad)
-    IO.put(renderHelp(false, FLAGS))
+    IO.put(renderHelp(true, FLAGS))
   },
   (good) => {
     IO.put(good)
