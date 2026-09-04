@@ -29,6 +29,7 @@ export STATES = {
   failure: "failure",
   success: "success",
 }
+export type SadClown = SadClown(Boolean, String)
 export alias ClownState = {
   active :: String,
   bases :: List #[String, String],
@@ -38,7 +39,7 @@ export alias ClownState = {
   madlibJsonPath :: String,
   output :: Maybe String,
   processed :: Boolean,
-  results :: Wish String String,
+  results :: Wish SadClown String,
   showHelp :: Boolean,
   useColor :: Boolean,
 }
@@ -54,9 +55,9 @@ export INITIAL_STATE = {
   useColor: true,
   configured: false,
   processed: false,
-  results: Wish.bad("Unprocessed"),
+  results: Wish.bad(SadClown(true, "Unprocessed")),
 }
-stringRef = (def, a, b) => String.isEmpty(b) ? b : String.isEmpty(a) ? a : def
+stringRef = (def, a, b) => !String.isEmpty(b) ? b : !String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
 mergeStates :: ClownState -> ClownState -> ClownState
 export mergeStates = (a, b) => (
@@ -66,12 +67,11 @@ export mergeStates = (a, b) => (
     bases: List.concat(a.bases, b.bases),
     input: maybeRef(a.input, b.input),
     madlibJsonPath: stringRef("./madlib.json", a.madlibJsonPath, b.madlibJsonPath),
-    // madlibJson: maybeRef(a.madlibJson, b.madlibJson),
     output: maybeRef(a.output, b.output),
-    showHelp: b.showHelp || a.showHelp,
-    useColor: b.useColor || a.useColor,
-    configured: b.configured || a.configured,
-    processed: b.processed || a.processed,
+    showHelp: b.showHelp,
+    useColor: b.useColor,
+    configured: b.configured,
+    processed: b.processed,
     results: b.results,
   }
 )
@@ -87,25 +87,20 @@ export alias HiddenController = {
   get :: {} -> ClownCarControl,
   send :: OutsideInfluence -> ClownCarControl,
 }
-stateName = pipe(
-  Interpreter.machine,
-)
 permaloop :: ClownCarControl -> HiddenController
 export permaloop = (ctrl) => {
-  iter = 0
   command = ctrl
   send :: OutsideInfluence -> ClownCarControl
   send = (run) => {
-    iter := iter + 1
     command := pipe(
       run,
       (x) => {
         IO.pTrace(
-          "(" ++ show(iter) ++ ")",
+          "state",
           pipe(
             Interpreter.state,
             map(State.name),
-          )(x),
+          ),
         )
         return x
       },

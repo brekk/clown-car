@@ -6,8 +6,7 @@ import Wish from "Wish"
 import { Reducer } from "utter"
 
 import Cli from "@/Cli"
-import { EventProcessing } from "@/State"
-import { EventSetArgs, mergeStates } from "@/State"
+import { EventSetArgs, SadClown, mergeStates } from "@/State"
 
 
 

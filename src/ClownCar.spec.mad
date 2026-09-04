@@ -6,13 +6,11 @@ import Study from "Study"
 
 import ClownCar from "@/ClownCar"
 import MadlibJson from "@/MadlibJson"
+import { INITIAL_STATE } from "@/State"
 
 
 
 madlibJson = MadlibJson.readAndParse("./madlib.json")
-
-
-
 Study.report(
   ClownCar.grabAssignment,
   "grabAssignment",
@@ -29,7 +27,6 @@ Study.report(
     #["look:just:calm:down", #[Nothing, ["look", "just", "calm", "down"]]],
   ],
 )
-
 Study.report(
   ClownCar.applyWithBase(true, "base"),
   "applyWithBase - children, non-empty base",
@@ -43,7 +40,6 @@ Study.report(
     ],
   ],
 )
-
 Study.report(
   ClownCar.applyWithBase(true, ""),
   "applyWithBase - children, empty base",
@@ -54,7 +50,6 @@ Study.report(
     #[#[Just("garbage"), ["for", "life"]], #["garbage", `Party.tagWithScope("for", ["life"])`]],
   ],
 )
-
 Study.report(
   ClownCar.lineTag(false, "testKey", "base", "head"),
   "lineTag - non-children",
@@ -63,7 +58,6 @@ Study.report(
     #[[], #["testKey", `Party.tag("head")`]],
   ],
 )
-
 Study.report(
   ClownCar.lineTag(true, "testKey", "base", "head"),
   "lineTag - children",
@@ -72,7 +66,6 @@ Study.report(
     #[[], #["testKey", `Party.tagWithScope("base", ["head"])`]],
   ],
 )
-
 Study.report(
   ClownCar.aggregateState({ active: "", bases: [] }, []),
   "aggregateState",
@@ -96,9 +89,15 @@ Study.report(
       " - check = valid",
       #[{ active: "", bases: [#["check", `Party.tagWithScope("", ["valid"])`]] }, "check = valid"],
     ],
+    #[
+      " - check = valid:hey:yah",
+      #[
+        { active: "", bases: [#["check", `Party.tagWithScope("valid", ["hey", "yah"])`]] },
+        "check = valid:hey:yah",
+      ],
+    ],
   ],
 )
-
 Study.report(
   ClownCar.aggregateState({ active: "test", bases: [] }, []),
   "aggregateState - active set",
@@ -156,7 +155,7 @@ Study.report(
 )
 Study.asyncReport(
   pipe(
-    map(ClownCar.stateToLines($, "test-file", "blah", [], { bases: [] })),
+    map(ClownCar.stateToLines($, "test-file", "blah", [], INITIAL_STATE)),
     Wish.mapRej((_) => Test.Error("bad bad")),
   ),
   "stateToLines - no inputs",
@@ -182,10 +181,17 @@ export tapped = {
     ],
   ],
 )
-
 Study.asyncReport(
   pipe(
-    map(ClownCar.stateToLines($, "test-file", "blah", [], { bases: [#["skib", "dib"]] })),
+    map(
+      ClownCar.stateToLines(
+        $,
+        "test-file",
+        "blah",
+        [],
+        { ...INITIAL_STATE, bases: [#["skib", "dib"], #["blib", "yib"]] },
+      ),
+    ),
     Wish.mapRej((_) => Test.Error("bad bad")),
   ),
   "stateToLines - bases",
@@ -200,12 +206,15 @@ import Party from "PartyBus"
 
 export tags = {
   skib: dib,
+  blib: yib,
 }
 export env = {
   skib: Party.env(tags.skib),
+  blib: Party.env(tags.blib),
 }
 export tapped = {
   skib: Party.tap(env.skib),
+  blib: Party.tap(env.blib),
 }`
         ++ "\n",
     ],

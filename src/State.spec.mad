@@ -1,0 +1,41 @@
+import { Just, Nothing } from "Maybe"
+
+import Study from "Study"
+
+import STATE from "@/State"
+
+
+
+Study.report(
+  (fn) => fn(STATE.EVENTS),
+  "EVENTS",
+  [
+    #[.initialize, "initialize"],
+    #[.processArgs, "processArgs"],
+    #[.readJson, "readMadlibJson"],
+    #[.convertInput, "convertedInput"],
+    #[.failedToConvert, "failedToConvert"],
+  ],
+)
+Study.report(
+  (fn) => fn(STATE.STATES),
+  "STATES",
+  [
+    #[.initial, "initial"],
+    #[.configuration, "configuration"],
+    #[.failure, "failure"],
+    #[.success, "success"],
+  ],
+)
+FIXTURE = {
+  withBarf: { ...STATE.INITIAL_STATE, showHelp: true, failure: Just("barf"), useColor: false },
+  madlibJsonPath: { ...STATE.INITIAL_STATE, madlibJsonPath: "./ref/ref/madlib.json" },
+}
+Study.report(
+  Study.caseN2(STATE.mergeStates),
+  "mergeStates",
+  [
+    #[#[STATE.INITIAL_STATE, FIXTURE.withBarf], FIXTURE.withBarf],
+    #[#[STATE.INITIAL_STATE, FIXTURE.madlibJsonPath], FIXTURE.madlibJsonPath],
+  ],
+)

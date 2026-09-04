@@ -6,7 +6,7 @@ import { Left, Right } from "Either"
 import Either from "Either"
 import IO from "IO"
 import List from "List"
-import { Just } from "Maybe"
+import { Just, isJust } from "Maybe"
 import Term from "Terminal"
 import Wish from "Wish"
 
@@ -18,11 +18,12 @@ import EFlags from "ensign/Flags"
 import ClownCar from "@/ClownCar"
 import _File from "@/File"
 import MadlibJson from "@/MadlibJson"
+import { SadClown } from "@/State"
 import State from "@/State"
 
 
 
-CLOWNCAR = "🤡🚗 clown-car"
+CLOWNCAR = "clown-car 🤡🚗 (0.0.1)"
 export FLAGS = [
   Declared.flagBoolean("help", ["h"], "🧐 These helpful explanations you're reading"),
   Declared.flagBoolean("color", ["K"], "🎨 Use color? (default: true)"),
@@ -131,17 +132,25 @@ export captureTheFlag = (state, flag) => where(flag) {
 }
 writeOut = (jsonPath, src, outPath) => pipe(
   MadlibJson.readAndParse,
+  Wish.mapRej(SadClown(false)),
   chain(
     (json) => pipe(
       ClownCar.applySpiritGumWithRules(json),
       outPath,
+      Wish.mapRej(SadClown(false)),
     )(src),
   ),
 )(jsonPath)
+FAIL_CASE = "<show help, don't show this value>"
 export fillfull = Wish.fulfill(
-  (bad) => {
-    IO.putLine(bad)
-    IO.put(renderHelp(true, FLAGS))
+  where {
+    SadClown(showHelp, bad) =>
+      if (bad == FAIL_CASE) {
+        IO.put(renderHelpDeets(showHelp, true, FLAGS))
+      } else do {
+        IO.putLine(bad)
+        IO.put(renderHelpDeets(false, true, FLAGS))
+      }
   },
   (good) => {
     IO.put(good)
@@ -153,20 +162,24 @@ export consumeFlags = pipe(
   map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
 )
 export applyClownCar = where {
-  Right({ input, madlibJsonPath, output }) =>
+  Right({ failure, input, madlibJsonPath, output, showHelp }) =>
     where(#[input, output]) {
       #[Just(src), Just(out)] =>
-        writeOut(madlibJsonPath, src, _File.write(out))
+        if (showHelp || isJust(failure)) {
+          writeOut(madlibJsonPath, src, _File.write(out))
+        } else {
+          Wish.bad(SadClown(showHelp, (failure ?? FAIL_CASE)))
+        }
 
       #[Just(src), _] =>
         writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
 
       _ =>
-        Wish.bad("--input is required")
+        Wish.bad(SadClown(true, "--input is required"))
     }
 
   Left(why) =>
-    Wish.bad(why)
+    Wish.bad(SadClown(false, why))
 }
 export processArgs = pipe(
   consumeFlags,

@@ -13,12 +13,14 @@ SIGNAL = {
   ),
   convertInput: Interpreter.send(EVENTS.convertInput, EventProcessing),
 }
+/*
 mainRaw = (args) => {
   pipe(
     Cli.processArgs,
     Cli.fillfull,
   )(args)
 }
+*/
 main = (args) => {
   pipe(
     SIGNAL.initialize,

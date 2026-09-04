@@ -1,0 +1,27 @@
+/* ★★★ clown-car@0.0.1 ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ./clown-car.clown-car
+ */
+
+import Party from "PartyBus"
+
+export tags = {
+  clownCar: Party.tag("clown-car"),
+  state: Party.tagWithScope("", ["state"]),
+  stateReducer: Party.tagWithScope("state", ["reducer"]),
+  stateGuard: Party.tagWithScope("state", ["guard"]),
+  logic: Party.tagWithScope("", ["logic"]),
+}
+export env = {
+  clownCar: Party.env(tags.clownCar),
+  state: Party.env(tags.state),
+  stateReducer: Party.env(tags.stateReducer),
+  stateGuard: Party.env(tags.stateGuard),
+  logic: Party.env(tags.logic),
+}
+export tapped = {
+  clownCar: Party.tap(env.clownCar),
+  state: Party.tap(env.state),
+  stateReducer: Party.tap(env.stateReducer),
+  stateGuard: Party.tap(env.stateGuard),
+  logic: Party.tap(env.logic),
+}
