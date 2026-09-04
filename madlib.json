@@ -28,8 +28,8 @@
       "description": "spirit-gum"
     },
     {
-      "minVersion": "0.7.0",
-      "url": "https://github.com/brekk/utter/archive/refs/tags/v0.7.0.zip",
+      "minVersion": "0.8.0",
+      "url": "https://github.com/brekk/utter/archive/refs/tags/v0.8.0.zip",
       "description": "utter"
     }
   ]

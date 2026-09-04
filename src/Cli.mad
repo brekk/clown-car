@@ -166,13 +166,17 @@ export applyClownCar = where {
     where(#[input, output]) {
       #[Just(src), Just(out)] =>
         if (showHelp || isJust(failure)) {
-          writeOut(madlibJsonPath, src, _File.write(out))
-        } else {
           Wish.bad(SadClown(showHelp, (failure ?? FAIL_CASE)))
+        } else {
+          writeOut(madlibJsonPath, src, _File.write(out))
         }
 
       #[Just(src), _] =>
-        writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
+        if (showHelp || isJust(failure)) {
+          Wish.bad(SadClown(showHelp, (failure ?? FAIL_CASE)))
+        } else {
+          writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
+        }
 
       _ =>
         Wish.bad(SadClown(true, "--input is required"))

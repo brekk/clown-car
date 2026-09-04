@@ -14,6 +14,8 @@ import Interpreter from "utter/Controller"
 import Machine from "utter/Machine"
 import State from "utter/State"
 
+import Log from "@/Log"
+
 
 
 export EVENTS = {
@@ -87,6 +89,21 @@ export alias HiddenController = {
   get :: {} -> ClownCarControl,
   send :: OutsideInfluence -> ClownCarControl,
 }
+/*
+(x) => {
+Log
+  .tapped
+  .state(
+    "state",
+    pipe(
+      Interpreter.state,
+      map(State.name),
+    ),
+    x,
+  )
+return x
+},
+*/
 permaloop :: ClownCarControl -> HiddenController
 export permaloop = (ctrl) => {
   command = ctrl
@@ -94,16 +111,15 @@ export permaloop = (ctrl) => {
   send = (run) => {
     command := pipe(
       run,
-      (x) => {
-        IO.pTrace(
+      Log
+        .tapped
+        .state(
           "state",
           pipe(
             Interpreter.state,
             map(State.name),
           ),
-        )
-        return x
-      },
+        ),
     )(command)
     return command
   }
