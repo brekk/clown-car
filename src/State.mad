@@ -31,7 +31,8 @@ export STATES = {
   failure: "failure",
   success: "success",
 }
-export type SadClown = SadClown(Boolean, String)
+// SadClown(showHelp, useColor, String)
+export type SadClown = SadClown(Boolean, Boolean, String)
 export alias ClownState = {
   active :: String,
   bases :: List #[String, String],
@@ -57,7 +58,7 @@ export INITIAL_STATE = {
   useColor: true,
   configured: false,
   processed: false,
-  results: Wish.bad(SadClown(true, "Unprocessed")),
+  results: Wish.bad(SadClown(true, true, "Unprocessed")),
 }
 stringRef = (def, a, b) => !String.isEmpty(b) ? b : !String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing

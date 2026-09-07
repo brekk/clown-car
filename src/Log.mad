@@ -1,5 +1,5 @@
 /* ★★★ clown-car@0.0.1 ★★★
- * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ./clown-car.clown-car
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: clown-car.clown-car
  */
 
 import Party from "PartyBus"

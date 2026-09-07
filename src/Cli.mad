@@ -23,6 +23,7 @@ import State from "@/State"
 
 
 
+conditionalColor = (fn, k, x) => k ? fn(x) : x
 CLOWNCAR = "clown-car 🤡🚗 (0.0.1)"
 export FLAGS = [
   Declared.flagBoolean("help", ["h"], "🧐 These helpful explanations you're reading"),
@@ -39,43 +40,56 @@ export FLAGS = [
     "✨ Set the output for the clowncar. Inferred from `--input` if not provided.",
   ),
 ]
+createColor = (x) => (
+  {
+    yellow: conditionalColor(IO.yellow, x),
+    red: conditionalColor(IO.red, x),
+    cyan: conditionalColor(Term.text.cyan, x),
+    bold: conditionalColor(Term.text.bold, x),
+    magenta: conditionalColor(Term.text.magenta, x),
+  }
+)
+backticks = "```"
 renderHelpDeets = (bool, useColor, flags) => {
+  C = createColor(useColor)
   fn = (useColor ? EPrint.printLegendWithColor : EPrint.printLegend)
   return CLOWNCAR
-    ++ "\n"
-    ++ "Tooling to autogenerate PartyBus logging files, from a simple format:\n"
+    ++ "\n\n"
+    ++ "Tooling to autogenerate PartyBus logging files"
     ++ (
       bool
-        ? `
-  // comments are allowed, but only single line
-  // this is the base tag value, equivalent to PartyBus.tag("bicycle")
-  ${Term.text.bold(IO.red("bicycle"))}
-  - ${
-          IO.yellow("body")
+        ? `, from a simple representative format:${"\n\n" ++ backticks}
+// comments are allowed, but only single line
+// this is the base tag value, equivalent to PartyBus.tag("bicycle")${
+          "\n" ++ C.bold(C.red("bicycle"))
+        }
+- ${
+          C.yellow("body")
         } // this is an implicit nested tag (so: PartyBus.tagWithScope("bicycle", ["body"]))
-  - ${IO.yellow("body")}:${
-          Term.text.cyan("fork")
+- ${C.yellow("body")}:${
+          C.cyan("fork")
         } // this is a nested implicit tag (so: PartyBus.tagWithScope("bicycle", ["body", "fork"]) and this becomes bodyFork)
-  - ${Term.text.bold("config")} = ${
-          IO.yellow("xyz")
-        } // config = PartyBus.tagWithScope("bicycle", ["xyz"])
-  - ${Term.text.bold("ref")} = ${IO.yellow("config")}:${
-          Term.text.cyan("seat")
+- ${C.bold("config")} = ${C.yellow("xyz")} // config = PartyBus.tagWithScope("bicycle", ["xyz"])
+- ${C.bold("ref")} = ${C.yellow("config")}:${
+          C.cyan("seat")
         } // ref = PartyBus.tagWithScope("bicycle", ["config", "seat"])
-  - ${IO.yellow("handlebar")}
-  - ${IO.yellow("handlebar")}:${Term.text.cyan("brake")}
-  - ${IO.yellow("seat")}
-  - ${IO.yellow("wheel")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("spoke")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("tire")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("shifter")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}:${Term.text.magenta("front")}
-  - ${IO.yellow("wheel")}:${Term.text.cyan("brake")}:${Term.text.magenta("rear")}`
+- ${C.yellow("handlebar")}
+- ${C.yellow("handlebar")}:${C.cyan("brake")}
+- ${C.yellow("seat")}
+- ${C.yellow("wheel")}
+- ${C.yellow("wheel")}:${C.cyan("spoke")}
+- ${C.yellow("wheel")}:${C.cyan("tire")}
+- ${C.yellow("wheel")}:${C.cyan("shifter")}
+- ${C.yellow("wheel")}:${C.cyan("brake")}
+- ${C.yellow("wheel")}:${C.cyan("brake")}:${C.magenta("front")}
+- ${C.yellow("wheel")}:${C.cyan("brake")}:${C.magenta("rear")}`
+          ++ "\n"
+          ++ backticks
           ++ "\n\n"
-        : ""
+        : "\n\n"
     )
     ++ fn(flags)
+    ++ "\n\n"
 }
 export renderHelp = renderHelpDeets(false)
 export renderHelpWithDetail = renderHelpDeets(true)
@@ -130,26 +144,26 @@ export captureTheFlag = (state, flag) => where(flag) {
   EFlags.InvalidFlag =>
     #[true, { ...state, failure: Just("Passed invalid flags") }]
 }
-writeOut = (jsonPath, src, outPath) => pipe(
+writeOut = (useColor, jsonPath, src, outPath) => pipe(
   MadlibJson.readAndParse,
-  Wish.mapRej(SadClown(false)),
+  Wish.mapRej(SadClown(false, useColor)),
   chain(
     (json) => pipe(
       ClownCar.applySpiritGumWithRules(json),
       outPath,
-      Wish.mapRej(SadClown(false)),
+      Wish.mapRej(SadClown(false, useColor)),
     )(src),
   ),
 )(jsonPath)
 FAIL_CASE = "<show help, don't show this value>"
 export fillfull = Wish.fulfill(
   where {
-    SadClown(showHelp, bad) =>
+    SadClown(showHelp, useColor, bad) =>
       if (bad == FAIL_CASE) {
-        IO.put(renderHelpDeets(showHelp, true, FLAGS))
+        IO.put(renderHelpDeets(showHelp, useColor, FLAGS))
       } else do {
         IO.putLine(bad)
-        IO.put(renderHelpDeets(false, true, FLAGS))
+        IO.put(renderHelpDeets(false, useColor, FLAGS))
       }
   },
   (good) => {
@@ -161,29 +175,31 @@ export consumeFlags = pipe(
   parseArgs,
   map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
 )
+// check for explicit failure as we go, if so
+// swap to a bad wish
 export applyClownCar = where {
-  Right({ failure, input, madlibJsonPath, output, showHelp }) =>
+  Right({ failure, input, madlibJsonPath, useColor, output, showHelp }) =>
     where(#[input, output]) {
       #[Just(src), Just(out)] =>
         if (showHelp || isJust(failure)) {
-          Wish.bad(SadClown(showHelp, (failure ?? FAIL_CASE)))
+          Wish.bad(SadClown(showHelp, useColor, (failure ?? FAIL_CASE)))
         } else {
-          writeOut(madlibJsonPath, src, _File.write(out))
+          writeOut(useColor, madlibJsonPath, src, _File.write(out))
         }
 
       #[Just(src), _] =>
         if (showHelp || isJust(failure)) {
-          Wish.bad(SadClown(showHelp, (failure ?? FAIL_CASE)))
+          Wish.bad(SadClown(showHelp, useColor, (failure ?? FAIL_CASE)))
         } else {
-          writeOut(madlibJsonPath, src, _File.writeDynamicName(src))
+          writeOut(useColor, madlibJsonPath, src, _File.writeDynamicName(src))
         }
 
       _ =>
-        Wish.bad(SadClown(true, "--input is required"))
+        Wish.bad(SadClown(true, useColor, showHelp ? FAIL_CASE : "--input is required"))
     }
 
   Left(why) =>
-    Wish.bad(SadClown(false, why))
+    Wish.bad(SadClown(false, true, why))
 }
 export processArgs = pipe(
   consumeFlags,
