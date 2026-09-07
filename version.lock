@@ -1,18 +1,100 @@
 {
-  "buildHash": "ad073e4421c7aae8438d811e1f10bb6c",
+  "buildHash": "5df5153a959a3114c535eac33d2339b0",
   "jsApi": {
     "apiInstances": [],
-    "apiAliases": {},
+    "apiAliases": {
+      "src/State.mad#ClownState": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "src/State.mad#OutsideInfluence": "(ClownCarControl -> ClownCarControl)",
+      "src/State.mad#HiddenController": "{ get :: {} -> ClownCarControl, send :: OutsideInfluence -> ClownCarControl }",
+      "src/State.mad#ClownCarControl": "(Controller ClownCarPayload ClownState)"
+    },
     "apiInterfaces": {},
-    "apiNames": {},
-    "apiTypes": {}
+    "apiNames": {
+      "src/String.mad#camelCaseList": "List String -> String",
+      "src/State.mad#INITIAL_STATE": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "src/String.mad#modifyFirstLetter": "(String -> String) -> String -> String",
+      "src/State.mad#STATES": "{ configuration :: String, failure :: String, initial :: String, success :: String }",
+      "src/State.mad#permaloop": "Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { get :: {} -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }, send :: (Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }) -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } }",
+      "src/Log.mad#tags": "{ action :: Tag, clownCar :: Tag, guard :: Tag, loop :: Tag, reducer :: Tag, state :: Tag }",
+      "stateToLines": "{ bin :: Maybe String, dependencies :: Maybe (List { description :: Maybe String, name :: String, sanitizedUrl :: String, url :: String, versionRange :: VersionRange }), hooks :: Maybe (Dictionary String String), importAliases :: Maybe (Dictionary String String), madlibVersion :: Maybe String, main :: String, name :: String, version :: Version } -> String -> String -> List String -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> String",
+      "src/String.mad#isIndented": "String -> Boolean",
+      "src/Log.mad#env": "(Show a, Show b, Show c, Show d, Show e, Show f) => { action :: String -> a -> a, clownCar :: String -> f -> f, guard :: String -> c -> c, loop :: String -> b -> b, reducer :: String -> d -> d, state :: String -> e -> e }",
+      "src/State.mad#mergeStates": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "lineTag": "(Show a, Show b, Show c) => Boolean -> d -> b -> c -> List a -> #[d, String]",
+      "src/List.mad#chop": "Integer -> List a -> List a",
+      "src/String.mad#chop": "Integer -> String -> String",
+      "src/String.mad#stripIndentation": "String -> String",
+      "src/String.mad#stripComments": "String -> String",
+      "src/String.mad#checkAssignment": "String -> Boolean",
+      "src/String.mad#capitalize": "String -> String",
+      "grabAssignment": "String -> #[Maybe String, List String]",
+      "src/State.mad#EVENTS": "{ convertInput :: String, failedToConvert :: String, initialize :: String, processArgs :: String, readJson :: String }",
+      "applySpiritGumWithRules": "{ bin :: Maybe String, dependencies :: Maybe (List { description :: Maybe String, name :: String, sanitizedUrl :: String, url :: String, versionRange :: VersionRange }), hooks :: Maybe (Dictionary String String), importAliases :: Maybe (Dictionary String String), madlibVersion :: Maybe String, main :: String, name :: String, version :: Version } -> String -> Wish String String",
+      "src/Log.mad#tapped": "(Show a, Show b, Show c, Show d, Show e, Show f) => { action :: String -> (g -> a) -> g -> g, clownCar :: String -> (h -> f) -> h -> h, guard :: String -> (i -> c) -> i -> i, loop :: String -> (j -> b) -> j -> j, reducer :: String -> (k -> d) -> k -> k, state :: String -> (l -> e) -> l -> l }",
+      "aggregateState": "{ ...base, active :: String, bases :: List #[String, String] } -> a -> String -> #[{ ...base, active :: String, bases :: List #[String, String] }, String]",
+      "applyWithBase": "Boolean -> String -> #[Maybe String, List String] -> #[String, String]",
+      "showParts": "Show a => List a -> String"
+    },
+    "apiTypes": {
+      "src/State.mad#SadClown": [
+        "SadClown Boolean Boolean String"
+      ],
+      "src/State.mad#ClownCarPayload": [
+        "EventSetArgs (List String)",
+        "EventSetMadlibJson String",
+        "EventProcessing",
+        "EventFailure",
+        "EventSuccess"
+      ]
+    }
   },
   "llvmApi": {
     "apiInstances": [],
-    "apiAliases": {},
+    "apiAliases": {
+      "src/State.mad#ClownState": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "src/State.mad#OutsideInfluence": "(ClownCarControl -> ClownCarControl)",
+      "src/State.mad#HiddenController": "{ get :: {} -> ClownCarControl, send :: OutsideInfluence -> ClownCarControl }",
+      "src/State.mad#ClownCarControl": "(Controller ClownCarPayload ClownState)"
+    },
     "apiInterfaces": {},
-    "apiNames": {},
-    "apiTypes": {}
+    "apiNames": {
+      "src/String.mad#camelCaseList": "List String -> String",
+      "src/State.mad#INITIAL_STATE": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "src/String.mad#modifyFirstLetter": "(String -> String) -> String -> String",
+      "src/State.mad#STATES": "{ configuration :: String, failure :: String, initial :: String, success :: String }",
+      "src/State.mad#permaloop": "Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { get :: {} -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }, send :: (Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }) -> Controller ClownCarPayload { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } }",
+      "src/Log.mad#tags": "{ action :: Tag, clownCar :: Tag, guard :: Tag, loop :: Tag, reducer :: Tag, state :: Tag }",
+      "stateToLines": "{ bin :: Maybe String, dependencies :: Maybe (List { description :: Maybe String, name :: String, sanitizedUrl :: String, url :: String, versionRange :: VersionRange }), hooks :: Maybe (Dictionary String String), importAliases :: Maybe (Dictionary String String), madlibVersion :: Maybe String, main :: String, name :: String, version :: Version } -> String -> String -> List String -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> String",
+      "src/String.mad#isIndented": "String -> Boolean",
+      "src/Log.mad#env": "(Show a, Show b, Show c, Show d, Show e, Show f) => { action :: String -> a -> a, clownCar :: String -> f -> f, guard :: String -> c -> c, loop :: String -> b -> b, reducer :: String -> d -> d, state :: String -> e -> e }",
+      "src/State.mad#mergeStates": "{ active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean } -> { active :: String, bases :: List #[String, String], configured :: Boolean, failure :: Maybe String, input :: Maybe String, madlibJsonPath :: String, output :: Maybe String, processed :: Boolean, results :: Wish SadClown String, showHelp :: Boolean, useColor :: Boolean }",
+      "lineTag": "(Show a, Show b, Show c) => Boolean -> d -> b -> c -> List a -> #[d, String]",
+      "src/List.mad#chop": "Integer -> List a -> List a",
+      "src/String.mad#chop": "Integer -> String -> String",
+      "src/String.mad#stripIndentation": "String -> String",
+      "src/String.mad#stripComments": "String -> String",
+      "src/String.mad#checkAssignment": "String -> Boolean",
+      "src/String.mad#capitalize": "String -> String",
+      "grabAssignment": "String -> #[Maybe String, List String]",
+      "src/State.mad#EVENTS": "{ convertInput :: String, failedToConvert :: String, initialize :: String, processArgs :: String, readJson :: String }",
+      "applySpiritGumWithRules": "{ bin :: Maybe String, dependencies :: Maybe (List { description :: Maybe String, name :: String, sanitizedUrl :: String, url :: String, versionRange :: VersionRange }), hooks :: Maybe (Dictionary String String), importAliases :: Maybe (Dictionary String String), madlibVersion :: Maybe String, main :: String, name :: String, version :: Version } -> String -> Wish String String",
+      "src/Log.mad#tapped": "(Show a, Show b, Show c, Show d, Show e, Show f) => { action :: String -> (g -> a) -> g -> g, clownCar :: String -> (h -> f) -> h -> h, guard :: String -> (i -> c) -> i -> i, loop :: String -> (j -> b) -> j -> j, reducer :: String -> (k -> d) -> k -> k, state :: String -> (l -> e) -> l -> l }",
+      "aggregateState": "{ ...base, active :: String, bases :: List #[String, String] } -> a -> String -> #[{ ...base, active :: String, bases :: List #[String, String] }, String]",
+      "applyWithBase": "Boolean -> String -> #[Maybe String, List String] -> #[String, String]",
+      "showParts": "Show a => List a -> String"
+    },
+    "apiTypes": {
+      "src/State.mad#SadClown": [
+        "SadClown Boolean Boolean String"
+      ],
+      "src/State.mad#ClownCarPayload": [
+        "EventSetArgs (List String)",
+        "EventSetMadlibJson String",
+        "EventProcessing",
+        "EventFailure",
+        "EventSuccess"
+      ]
+    }
   },
-  "versionHash": "25e64aa754c310d45c1e084d574c1bb0"
+  "versionHash": "e5d18b4e2c1dc1975775ee385ab41c85"
 }
