@@ -1,6 +1,6 @@
 {
   "name": "clown-car",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "src/ClownCar.mad",
   "bin": "src/Cli.mad",
   "importAliases": {
@@ -18,7 +18,7 @@
       "description": "Study"
     },
     {
-      "minVersion": "0.0.9",
+      "minVersion": "0.2.2",
       "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.0.9.zip",
       "description": "PartyBus"
     },
