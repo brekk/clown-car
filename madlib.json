@@ -8,8 +8,8 @@
   },
   "dependencies": [
     {
-      "minVersion": "0.1.4",
-      "url": "https://github.com/brekk/ensign/archive/refs/tags/v0.1.4.zip",
+      "minVersion": "0.1.5",
+      "url": "https://github.com/brekk/ensign/archive/refs/tags/v0.1.5.zip",
       "description": "ensign"
     },
     {
@@ -18,18 +18,18 @@
       "description": "Study"
     },
     {
-      "minVersion": "0.3.0",
-      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.3.0.zip",
+      "minVersion": "0.3.1",
+      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.3.1.zip",
       "description": "PartyBus"
     },
     {
-      "minVersion": "0.2.4",
-      "url": "https://github.com/brekk/spirit-gum/archive/refs/tags/v0.2.4.zip",
+      "minVersion": "0.2.5",
+      "url": "https://github.com/brekk/spirit-gum/archive/refs/tags/v0.2.5.zip",
       "description": "spirit-gum"
     },
     {
-      "minVersion": "0.8.2",
-      "url": "https://github.com/brekk/utter/archive/refs/tags/v0.8.2.zip",
+      "minVersion": "0.8.3",
+      "url": "https://github.com/brekk/utter/archive/refs/tags/v0.8.3.zip",
       "description": "utter"
     }
   ]
