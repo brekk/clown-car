@@ -1,3 +1,5 @@
+import type { Maybe } from "Maybe"
+
 import type { MadlibDotJson } from "mad-at-json"
 
 import type { ClownState } from "@/State"
@@ -16,6 +18,7 @@ import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
 
 import _List from "@/List"
+import Log from "@/Log"
 import { INITIAL_STATE } from "@/State"
 import _String from "@/String"
 
@@ -28,6 +31,7 @@ export grabAssignment = pipe(
   Fn.ifElse(
     String.match("="),
     pipe(
+      Log.env.coreLogic("checking line with assignment"),
       String.split("="),
       map(String.trim),
       where {
@@ -55,6 +59,7 @@ export showParts = pipe(
   map(show),
   String.join(", "),
 )
+lineTag :: (Show a, Eq a) => Boolean -> String -> String -> String -> List a -> #[String, String]
 export lineTag = (isChild, key, base, head, rest) => {
   _h = show(head)
   return #[
@@ -70,6 +75,7 @@ export lineTag = (isChild, key, base, head, rest) => {
     },
   ]
 }
+applyWithBase :: Boolean -> String -> #[Maybe String, List String] -> #[String, String]
 export applyWithBase = (isChild, base, vv) => where(vv) {
   #[Just(key), parts] =>
     where(#[List.first(parts), _List.chop(1, parts)]) {
@@ -96,36 +102,30 @@ export applyWithBase = (isChild, base, vv) => where(vv) {
       #[_String.camelCaseList(parts), `Party.tagWithScope(${show(base)}, [${showParts(parts)}])`]
     }
 }
-export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line))) {
-  #[{ ...state, active: "" }, line]
-} else do {
-  line2 = pipe(
-    _String.stripComments,
-    String.trim,
-  )(line)
-  return if (String.isEmpty(line2)) {
-    #[state, ""]
-  } else do {
-    indented = _String.isIndented(line2)
-    line3 = _String.stripIndentation(line2)
-    parts = pipe(
-      String.split("="),
-      map(
-        pipe(
-          String.trim,
-          String.split(":"),
-        ),
+processClownLine :: String -> String -> String -> ClownState -> #[ClownState, String]
+processClownLine = (activeKey, active, line2, state) => {
+  activeSet = !String.isEmpty(active)
+  indented = _String.isIndented(line2)
+  line3 = _String.stripIndentation(line2)
+  parts = pipe(
+    String.split("="),
+    map(
+      pipe(
+        String.trim,
+        String.split(":"),
       ),
-    )(line3)
-    hasAssignment = _String.checkAssignment(line3)
+    ),
+  )(line3)
+  hasAssignment = _String.checkAssignment(line3)
 
-    assigned = grabAssignment(line3)
-    bases = pipe(
-      applyWithBase(indented, state.active),
-    )(assigned)
+  assigned = grabAssignment(line3)
+  bases = pipe(
+    applyWithBase(indented, active),
+  )(assigned)
 
-    // [] => ({tag: "", scope: []})
-    return if (hasAssignment) do {
+  Log.env.core("processing non-empty line", line2)
+  return if (hasAssignment) {
+    if (activeSet) do {
       converted = where(parts) {
         [[key]] =>
           key
@@ -133,26 +133,60 @@ export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line)
         _ =>
           ""
       }
-      active = !indented ? converted : state.active
+      _active = #[activeKey, !indented ? converted : active]
+
+
       return #[
         {
           ...state,
           // scopes: [...state.scopes, converted],
-          active,
+          active: _active,
           bases: [...state.bases, bases],
         },
         line3,
       ]
     } else do {
-      converted = where(parts) {
-        [x] =>
-          _String.camelCaseList(x)
+      return pipe(
+        String.split("="),
+        map(String.trim),
+        where {
+          [a, b] =>
+            #[a, b]
 
-        _ =>
-          ""
-      }
-      active = !indented ? converted : state.active
-      return #[{ ...state, active, bases: [...state.bases, bases] }, line3]
+          _ =>
+            #["", ""]
+        },
+        Log.env.coreRender("the new new"),
+        (_active) => #[{ ...state, active: _active }, line3],
+      )(line3)
+    }
+  } else do {
+    converted = where(parts) {
+      [x] =>
+        _String.camelCaseList(x)
+
+      _ =>
+        ""
+    }
+    _active = #[activeKey, !indented ? converted : active]
+
+    return #[{ ...state, active: _active, bases: [...state.bases, bases] }, line3]
+  }
+}
+aggregateState :: ClownState -> Integer -> String -> #[ClownState, String]
+export aggregateState = (state, _, line) => if (String.isEmpty(String.trim(line))) {
+  #[{ ...state, active: #["", ""] }, line]
+} else do {
+  line2 = pipe(
+    _String.stripComments,
+    String.trim,
+  )(line)
+  return if (String.isEmpty(line2)) {
+    #[state, ""]
+  } else {
+    where(state.active) {
+      #[activeKey, active] =>
+        processClownLine(activeKey, active, line2, state)
     }
   }
 }

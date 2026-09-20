@@ -1,4 +1,4 @@
-/* ★★★ clown-car@0.0.1 ★★★
+/* ★★★ clown-car@0.1.4 ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: clown-car.clown-car
  */
 
@@ -8,6 +8,9 @@ import Party from "PartyBus"
 
 export tags = {
   clownCar: Party.tag("clownCar"),
+  core: Party.tagWithScope("clownCar", ["core"]),
+  coreLogic: Party.tagWithScope("clownCar", ["core", "logic"]),
+  coreRender: Party.tagWithScope("clownCar", ["core", "render"]),
   state: Party.tagWithScope("clownCar", ["state"]),
   reducer: Party.tagWithScope("clownCar", ["reducer"]),
   guard: Party.tagWithScope("clownCar", ["guard"]),
@@ -16,6 +19,9 @@ export tags = {
 }
 export env = {
   clownCar: Party.env(tags.clownCar),
+  core: Party.env(tags.core),
+  coreLogic: Party.env(tags.coreLogic),
+  coreRender: Party.env(tags.coreRender),
   state: Party.env(tags.state),
   reducer: Party.env(tags.reducer),
   guard: Party.env(tags.guard),
@@ -24,6 +30,9 @@ export env = {
 }
 export tapped = {
   clownCar: Party.tap(env.clownCar),
+  core: Party.tap(env.core),
+  coreLogic: Party.tap(env.coreLogic),
+  coreRender: Party.tap(env.coreRender),
   state: Party.tap(env.state),
   reducer: Party.tap(env.reducer),
   guard: Party.tap(env.guard),

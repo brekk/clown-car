@@ -3,15 +3,12 @@ import type { Wish } from "Wish"
 
 import type { Controller } from "utter"
 
-import IO from "IO"
 import List from "List"
-import { Just, Nothing, isJust } from "Maybe"
+import { Nothing, isJust } from "Maybe"
 import String from "String"
 import Wish from "Wish"
 
-import Utter from "utter"
 import Interpreter from "utter/Controller"
-import Machine from "utter/Machine"
 import State from "utter/State"
 
 import Log from "@/Log"
@@ -34,7 +31,7 @@ export STATES = {
 // SadClown(showHelp, useColor, String)
 export type SadClown = SadClown(Boolean, Boolean, String)
 export alias ClownState = {
-  active :: String,
+  active :: #[String, String],
   bases :: List #[String, String],
   configured :: Boolean,
   failure :: Maybe String,
@@ -49,7 +46,7 @@ export alias ClownState = {
 INITIAL_STATE :: ClownState
 export INITIAL_STATE = {
   failure: Nothing,
-  active: "",
+  active: #["", ""],
   bases: [],
   input: Nothing,
   madlibJsonPath: "./madlib.json",
@@ -66,7 +63,7 @@ mergeStates :: ClownState -> ClownState -> ClownState
 export mergeStates = (a, b) => (
   {
     failure: maybeRef(a.failure, b.failure),
-    active: stringRef("", a.active, b.active),
+    active: b.active,
     bases: List.concat(a.bases, b.bases),
     input: maybeRef(a.input, b.input),
     madlibJsonPath: stringRef("./madlib.json", a.madlibJsonPath, b.madlibJsonPath),
@@ -90,21 +87,6 @@ export alias HiddenController = {
   get :: {} -> ClownCarControl,
   send :: OutsideInfluence -> ClownCarControl,
 }
-/*
-(x) => {
-Log
-  .tapped
-  .state(
-    "state",
-    pipe(
-      Interpreter.state,
-      map(State.name),
-    ),
-    x,
-  )
-return x
-},
-*/
 permaloop :: ClownCarControl -> HiddenController
 export permaloop = (ctrl) => {
   command = ctrl

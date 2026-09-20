@@ -1,6 +1,6 @@
 BUILD_DIR := ./build
 SOURCES := ./src
-EXEC := clowncar
+EXEC := clown-car
 
 DEPS := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*))
 

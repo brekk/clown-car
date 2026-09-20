@@ -1,4 +1,7 @@
-clownCar
+clownCar = clown-car
+- core
+- core:logic
+- core:render
 - state
 - reducer
 - guard
