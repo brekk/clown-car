@@ -1,6 +1,6 @@
 {
   "name": "clown-car",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "src/ClownCar.mad",
   "bin": "src/Cli.mad",
   "importAliases": {
