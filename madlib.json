@@ -4,7 +4,6 @@
   "main": "src/ClownCar.mad",
   "bin": "src/Cli.mad",
   "importAliases": {
-    "examples": "examples",
     ".": "src"
   },
   "dependencies": [
