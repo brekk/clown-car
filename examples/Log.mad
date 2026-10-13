@@ -1,0 +1,57 @@
+/* ★★★ clown-car@0.1.4 ★★★
+ * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: example.clowncar
+ */
+
+import Party from "PartyBus"
+import PartyJson from "PartyBus/Json"
+
+
+
+export tags = {
+  pizzeria: Party.tag("pizzeria"),
+  kitchen: Party.tagWithScope("pizzeria", ["kitchen"]),
+  kitchenFoodPrep: Party.tagWithScope("pizzeria", ["kitchen", "food-prep"]),
+  kitchenFoodValidator: Party.tagWithScope("pizzeria", ["kitchen", "food-validator"]),
+  kitchenStock: Party.tagWithScope("pizzeria", ["kitchen", "stock"]),
+  order: Party.tagWithScope("pizzeria", ["order"]),
+  orderDetail: Party.tagWithScope("pizzeria", ["order", "detail"]),
+  server: Party.tagWithScope("pizzeria", ["server"]),
+  yell: Party.tagWithScope("server", ["note"]),
+  serverOrder: Party.tagWithScope("pizzeria", ["server", "order"]),
+}
+export env = {
+  pizzeria: Party.env(tags.pizzeria),
+  kitchen: Party.env(tags.kitchen),
+  kitchenFoodPrep: Party.env(tags.kitchenFoodPrep),
+  kitchenFoodValidator: Party.env(tags.kitchenFoodValidator),
+  kitchenStock: Party.env(tags.kitchenStock),
+  order: Party.env(tags.order),
+  orderDetail: Party.env(tags.orderDetail),
+  server: Party.env(tags.server),
+  yell: Party.env(tags.yell),
+  serverOrder: Party.env(tags.serverOrder),
+}
+export envJson = {
+  pizzeria: PartyJson.env(tags.pizzeria),
+  kitchen: PartyJson.env(tags.kitchen),
+  kitchenFoodPrep: PartyJson.env(tags.kitchenFoodPrep),
+  kitchenFoodValidator: PartyJson.env(tags.kitchenFoodValidator),
+  kitchenStock: PartyJson.env(tags.kitchenStock),
+  order: PartyJson.env(tags.order),
+  orderDetail: PartyJson.env(tags.orderDetail),
+  server: PartyJson.env(tags.server),
+  yell: PartyJson.env(tags.yell),
+  serverOrder: PartyJson.env(tags.serverOrder),
+}
+export tapped = {
+  pizzeria: Party.tap(env.pizzeria),
+  kitchen: Party.tap(env.kitchen),
+  kitchenFoodPrep: Party.tap(env.kitchenFoodPrep),
+  kitchenFoodValidator: Party.tap(env.kitchenFoodValidator),
+  kitchenStock: Party.tap(env.kitchenStock),
+  order: Party.tap(env.order),
+  orderDetail: Party.tap(env.orderDetail),
+  server: Party.tap(env.server),
+  yell: Party.tap(env.yell),
+  serverOrder: Party.tap(env.serverOrder),
+}

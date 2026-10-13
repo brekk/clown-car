@@ -3,11 +3,12 @@
  */
 
 import Party from "PartyBus"
+import PartyJson from "PartyBus/Json"
 
 
 
 export tags = {
-  clownCar: Party.tag("clownCar"),
+  clownCar: Party.tag("clown-car"),
   core: Party.tagWithScope("clownCar", ["core"]),
   coreLogic: Party.tagWithScope("clownCar", ["core", "logic"]),
   coreRender: Party.tagWithScope("clownCar", ["core", "render"]),
@@ -27,6 +28,17 @@ export env = {
   guard: Party.env(tags.guard),
   loop: Party.env(tags.loop),
   action: Party.env(tags.action),
+}
+export envJson = {
+  clownCar: PartyJson.env(tags.clownCar),
+  core: PartyJson.env(tags.core),
+  coreLogic: PartyJson.env(tags.coreLogic),
+  coreRender: PartyJson.env(tags.coreRender),
+  state: PartyJson.env(tags.state),
+  reducer: PartyJson.env(tags.reducer),
+  guard: PartyJson.env(tags.guard),
+  loop: PartyJson.env(tags.loop),
+  action: PartyJson.env(tags.action),
 }
 export tapped = {
   clownCar: Party.tap(env.clownCar),

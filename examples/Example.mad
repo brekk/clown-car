@@ -1,0 +1,33 @@
+import IO from "IO"
+import {} from "Json"
+import JsonParser from "Json/Parse"
+import JsonPrinter from "Json/Print"
+
+import PartyJson from "PartyBus/Json"
+
+import Log from "./Log"
+
+
+
+alias Order = { cost :: Float, name :: String, pizza :: String }
+instance Json Order {
+  fromJson = JsonParser.map3(
+    (cost, name, pizza) => ({ name, cost, pizza }),
+    JsonParser.field("cost", fromJson),
+    JsonParser.field("name", fromJson),
+    JsonParser.field("pizza", fromJson),
+  )
+
+  toJson = (x) => JsonPrinter.object([
+    #["cost", JsonPrinter.float(x.cost)],
+    #["name", JsonPrinter.string(x.name)],
+    #["pizza", JsonPrinter.string(x.pizza)],
+  ])
+}
+myOrder :: Order
+myOrder = { name: "brekk", cost: 0.02, pizza: "salami scharf" }
+main = () => {
+  Log.env.pizzeria("Welcome to Sal's", { complex: { values: { work: 30300330.30 } } })
+  // Log.envJson.pizzeria("order up", myOrder)
+  PartyJson.env(Log.tags.pizzeria, "order up", myOrder)
+}

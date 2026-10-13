@@ -51,6 +51,7 @@ export grabAssignment = pipe(
         pipe(
           String.split(":"),
           map(String.trim),
+          Log.env.coreLogic("~~~"),
         )(v),
       ]
   },
@@ -75,20 +76,28 @@ export lineTag = (isChild, key, base, head, rest) => {
     },
   ]
 }
+import IO from "IO"
+
+
+
 applyWithBase :: Boolean -> String -> #[Maybe String, List String] -> #[String, String]
 export applyWithBase = (isChild, base, vv) => where(vv) {
   #[Just(key), parts] =>
-    where(#[List.first(parts), _List.chop(1, parts)]) {
-      #[Just(head), rest] =>
-        lineTag(isChild, key, base, head, rest)
+    do {
+      IO.pTrace("BARTS PARTS", parts)
 
-      _ =>
-        #["", ""]
+      return where(#[List.first(parts), List.drop(1, parts)]) {
+        #[Just(head), rest] =>
+          lineTag(isChild, key, base, head, rest)
+
+        _ =>
+          #["", ""]
+      }
     }
 
   #[Nothing, parts] =>
     if (String.isEmpty(base)) {
-      where(#[List.first(parts), _List.chop(1, parts)]) {
+      where(#[List.first(parts), List.drop(1, parts)]) {
         #[Just(head), rest] =>
           pipe(
             _String.camelCaseList,
@@ -122,7 +131,6 @@ processClownLine = (activeKey, active, line2, state) => {
   bases = pipe(
     applyWithBase(indented, active),
   )(assigned)
-
   Log.env.core("processing non-empty line", line2)
   return if (hasAssignment) {
     if (activeSet) do {
@@ -134,7 +142,7 @@ processClownLine = (activeKey, active, line2, state) => {
           ""
       }
       _active = #[activeKey, !indented ? converted : active]
-
+      Log.env.coreLogic("assignment?", #[_active, converted, parts])
 
       return #[
         {
@@ -197,28 +205,41 @@ convertClownCarByLine = Rule.lineRule(
   [LineTransformer.ofLineRaw(aggregateState)],
 )
 INDENT = "  "
+renderPair = (fn) => map((#[k, v]) => mappend(INDENT, fn(k, v)))
 stateToLines :: MadlibDotJson -> String -> String -> List String -> ClownState -> String
 export stateToLines = (json, src, _, _, state) => {
   vals = pipe(
-    map((#[k, v]) => mappend(INDENT, k ++ `: ${v},`)),
+    renderPair((k, v) => k ++ `: ${v},`),
   )(state.bases)
   envVals = pipe(
-    map((#[k, v]) => mappend(INDENT, k ++ `: Party.env(tags.${k}),`)),
+    renderPair((k, _) => k ++ `: Party.env(tags.${k}),`),
+  )(state.bases)
+  envJsonVals = pipe(
+    renderPair((k, _) => k ++ `: PartyJson.env(tags.${k}),`),
+  )(state.bases)
+
+  envAllJsonVals = pipe(
+    renderPair(
+      (k, _) => "export " ++ k ++ ` = pipe(PartyJson.env(tags.${k}), Party.env(tags.${k}))`,
+    ),
+    String.unlines,
   )(state.bases)
   tapVals = pipe(
-    map((#[k, v]) => mappend(INDENT, k ++ `: Party.tap(env.${k}),`)),
+    renderPair((k, _) => k ++ `: Party.tap(env.${k}),`),
   )(state.bases)
   return `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
  * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
  */
 
 import Party from "PartyBus"
-
+import PartyJson from "PartyBus/Json"
 
 
 export tags = {${"\n" ++ String.unlines(vals)}
 }
 export env = {${"\n" ++ String.unlines(envVals)}
+}
+export envJson = {${"\n" ++ String.unlines(envJsonVals)}
 }
 export tapped = {${"\n" ++ String.unlines(tapVals)}
 }`

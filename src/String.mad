@@ -2,27 +2,24 @@ import Fn from "Function"
 import List from "List"
 import String from "String"
 
+import Ortho from "orthography"
+
 
 
 export chop = (i, xs) => String.slice(i, String.length(xs), xs)
-
 COMMENT = "^(.*)\\s?//(.*)$"
-
 export stripComments = Fn.when(String.match(COMMENT), String.replace(COMMENT, "$1"))
-
-
 export modifyFirstLetter = (fn, str) => pipe(
   String.slice(0, 1),
   fn,
   mappend($, chop(1, str)),
 )(str)
-
 export capitalize = modifyFirstLetter(String.toUpper)
-
-
-export camelCaseList = List.reduce((agg, x) => agg == "" ? x : agg ++ capitalize(x), "")
-
+export translator = Ortho.translate(Ortho.bidi(Ortho.pairs.kebab, Ortho.pairs.camel))
+export camelCaseList = pipe(
+  map(translator(true)),
+  List.reduce((agg, x) => agg == "" ? x : agg ++ capitalize(x), ""),
+)
 export checkAssignment = String.match("=")
-
 export stripIndentation = String.replace("^\\s?-\\s?(.*)", "$1")
 export isIndented = String.match("^\\s?-\\s?")
