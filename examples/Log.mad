@@ -1,5 +1,18 @@
-/* ★★★ clown-car@0.1.4 ★★★
- * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: example.clowncar
+/* ★★★ clown-car@0.1.4 created this file from example.clowncar
+
+// comments are allowed, but only single line
+// this is the base tag value: `PartyBus.tag("pizzeria")`
+pizzeria
+- kitchen
+- kitchen:food-prep // this is a nested logger under `kitchen`
+- kitchen:food-validator
+- kitchen:stock
+- order
+- order:detail
+- server
+- yell = server:note
+- server:order
+
  */
 
 import Party from "PartyBus"
@@ -31,16 +44,6 @@ export env = {
   yell: Party.env(tags.yell),
   serverOrder: Party.env(tags.serverOrder),
 }
-export pizzeriaJson = PartyJson.env(tags.pizzeria)
-export kitchenJson = PartyJson.env(tags.kitchen)
-export kitchenFoodPrepJson = PartyJson.env(tags.kitchenFoodPrep)
-export kitchenFoodValidatorJson = PartyJson.env(tags.kitchenFoodValidator)
-export kitchenStockJson = PartyJson.env(tags.kitchenStock)
-export orderJson = PartyJson.env(tags.order)
-export orderDetailJson = PartyJson.env(tags.orderDetail)
-export serverJson = PartyJson.env(tags.server)
-export yellJson = PartyJson.env(tags.yell)
-export serverOrderJson = PartyJson.env(tags.serverOrder)
 export tapped = {
   pizzeria: Party.tap(env.pizzeria),
   kitchen: Party.tap(env.kitchen),
@@ -53,3 +56,13 @@ export tapped = {
   yell: Party.tap(env.yell),
   serverOrder: Party.tap(env.serverOrder),
 }
+export jsonPizzeria = PartyJson.env(tags.pizzeria)
+export jsonKitchen = PartyJson.env(tags.kitchen)
+export jsonKitchenFoodPrep = PartyJson.env(tags.kitchenFoodPrep)
+export jsonKitchenFoodValidator = PartyJson.env(tags.kitchenFoodValidator)
+export jsonKitchenStock = PartyJson.env(tags.kitchenStock)
+export jsonOrder = PartyJson.env(tags.order)
+export jsonOrderDetail = PartyJson.env(tags.orderDetail)
+export jsonServer = PartyJson.env(tags.server)
+export jsonYell = PartyJson.env(tags.yell)
+export jsonServerOrder = PartyJson.env(tags.serverOrder)

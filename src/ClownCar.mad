@@ -8,11 +8,13 @@ import Fn from "Function"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import String from "String"
+import Tuple from "Tuple"
 import Wish from "Wish"
 
 import Version from "mad-at-json/Version"
 import Line from "spirit-gum/Line"
 import Rule from "spirit-gum/Rule"
+import BodyTransformer from "spirit-gum/Rule/TransformerBody"
 import LineTransformer from "spirit-gum/Rule/TransformerLine"
 import Template from "spirit-gum/Template"
 import VFile from "spirit-gum/VFile"
@@ -206,30 +208,17 @@ convertClownCarByLine = Rule.lineRule(
 )
 INDENT = "  "
 renderPair = (fn) => map((#[k, v]) => mappend(INDENT, fn(k, v)))
-stateToLines :: MadlibDotJson -> String -> String -> List String -> ClownState -> String
-export stateToLines = (json, src, _, _, state) => {
-  vals = pipe(
-    renderPair((k, v) => k ++ `: ${v},`),
-  )(state.bases)
-  envVals = pipe(
-    renderPair((k, _) => k ++ `: Party.env(tags.${k}),`),
-  )(state.bases)
-  envJsonVals = pipe(
-    renderPair((k, _) => "export " ++ k ++ `Json = PartyJson.env(tags.${k})`),
-  )(state.bases)
-
-  envAllJsonVals = pipe(
-    renderPair(
-      (k, _) => "export " ++ k ++ ` = pipe(PartyJson.env(tags.${k}), Party.env(tags.${k}))`,
-    ),
-    String.unlines,
-  )(state.bases)
-  tapVals = pipe(
-    renderPair((k, _) => k ++ `: Party.tap(env.${k}),`),
-  )(state.bases)
-  return `/* ★★★ ${json.name}@${Version.showVersion(json.version)} ★★★
- * THIS FILE AUTOMATICALLY GENERATED FROM SOURCE: ${src}
- */
+renderBuddy = (banner, srcPath, processedLines, state) => {
+  Log.env.coreRender("RAW", #[srcPath, processedLines])
+  vals = renderPair((k, v) => k ++ `: ${v},`, state.bases)
+  envVals = renderPair((k, _) => k ++ `: Party.env(tags.${k}),`, state.bases)
+  envJsonVals = renderPair(
+    (k, _) => "export json" ++ _String.capitalize(k) ++ ` = PartyJson.env(tags.${k})`,
+    state.bases,
+  )
+  tapVals = renderPair((k, _) => k ++ `: Party.tap(env.${k}),`, state.bases)
+  return banner
+    ++ `
 
 import Party from "PartyBus"
 import PartyJson from "PartyBus/Json"
@@ -238,15 +227,54 @@ import PartyJson from "PartyBus/Json"
 export tags = {${"\n" ++ String.unlines(vals)}
 }
 export env = {${"\n" ++ String.unlines(envVals)}
-}${"\n" ++ String.unlines(envJsonVals)}
+}
 export tapped = {${"\n" ++ String.unlines(tapVals)}
-}`
+}${"\n" ++ String.unlines(envJsonVals)}`
     ++ "\n"
 }
+stateToLines :: MadlibDotJson -> String -> List String -> ClownState -> String
+export stateToLines = (json, srcPath, processedLines, state) => where(state.snapshot) {
+  Nothing =>
+    renderBuddy(
+      `/* ★★★ ${json.name}@${Version.showVersion(json.version)} created this file from ${
+        srcPath
+      } */`,
+      srcPath,
+      processedLines,
+      state,
+    )
+
+  Just(raw) =>
+    renderBuddy(
+      `/* ★★★ ${json.name}@${Version.showVersion(json.version)} created this file from ${
+        srcPath ++ "\n\n" ++ String.unlines(raw) ++ "\n"
+      } */`,
+      srcPath,
+      processedLines,
+      state,
+    )
+}
+bodyStateAsSnapshot :: BodyTransformer.BodyStateTransformerFunction ClownState
+bodyStateAsSnapshot = (state, lines) => (
+  {
+    ...state,
+    snapshot: pipe(
+      map(Tuple.snd),
+      Just,
+    )(lines),
+  }
+)
+captureFirstSnapshotForDebugging = Rule.bodyRule(
+  false,
+  "clown-car/snapshot",
+  [],
+  [BodyTransformer.BodyStateTransformer(bodyStateAsSnapshot)],
+)
 applySpiritGumWithRules :: MadlibDotJson -> String -> Wish String String
 export applySpiritGumWithRules = (json, src) => pipe(
-  VFile.fromPath(src, [convertClownCarByLine]),
+  VFile.fromPath(src, [captureFirstSnapshotForDebugging, convertClownCarByLine]),
   Wish.mapRej(Fn.always("Unable to convert rules into spirit-gum vfile")),
-  map(Template.renderWithConverter(map(Line.render), stateToLines(json, src))),
+  map(Log.env.coreRender("virtual file")),
+  map(Template.renderWithConverter(map(Line.render), stateToLines(json))),
   Wish.mapRej(Fn.always("Unable to render")),
 )(INITIAL_STATE)

@@ -41,6 +41,7 @@ export alias ClownState = {
   processed :: Boolean,
   results :: Wish SadClown String,
   showHelp :: Boolean,
+  snapshot :: Maybe (List String),
   useColor :: Boolean,
 }
 INITIAL_STATE :: ClownState
@@ -56,6 +57,7 @@ export INITIAL_STATE = {
   configured: false,
   processed: false,
   results: Wish.bad(SadClown(true, true, "Unprocessed")),
+  snapshot: Nothing,
 }
 stringRef = (def, a, b) => !String.isEmpty(b) ? b : !String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
@@ -73,6 +75,7 @@ export mergeStates = (a, b) => (
     configured: b.configured,
     processed: b.processed,
     results: b.results,
+    snapshot: b.snapshot,
   }
 )
 export type ClownCarPayload
