@@ -215,7 +215,7 @@ export stateToLines = (json, src, _, _, state) => {
     renderPair((k, _) => k ++ `: Party.env(tags.${k}),`),
   )(state.bases)
   envJsonVals = pipe(
-    renderPair((k, _) => k ++ `: PartyJson.env(tags.${k}),`),
+    renderPair((k, _) => "export " ++ k ++ `Json = PartyJson.env(tags.${k})`),
   )(state.bases)
 
   envAllJsonVals = pipe(
@@ -238,9 +238,7 @@ import PartyJson from "PartyBus/Json"
 export tags = {${"\n" ++ String.unlines(vals)}
 }
 export env = {${"\n" ++ String.unlines(envVals)}
-}
-export envJson = {${"\n" ++ String.unlines(envJsonVals)}
-}
+}${"\n" ++ String.unlines(envJsonVals)}
 export tapped = {${"\n" ++ String.unlines(tapVals)}
 }`
     ++ "\n"

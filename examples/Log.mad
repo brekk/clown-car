@@ -31,18 +31,16 @@ export env = {
   yell: Party.env(tags.yell),
   serverOrder: Party.env(tags.serverOrder),
 }
-export envJson = {
-  pizzeria: PartyJson.env(tags.pizzeria),
-  kitchen: PartyJson.env(tags.kitchen),
-  kitchenFoodPrep: PartyJson.env(tags.kitchenFoodPrep),
-  kitchenFoodValidator: PartyJson.env(tags.kitchenFoodValidator),
-  kitchenStock: PartyJson.env(tags.kitchenStock),
-  order: PartyJson.env(tags.order),
-  orderDetail: PartyJson.env(tags.orderDetail),
-  server: PartyJson.env(tags.server),
-  yell: PartyJson.env(tags.yell),
-  serverOrder: PartyJson.env(tags.serverOrder),
-}
+export pizzeriaJson = PartyJson.env(tags.pizzeria)
+export kitchenJson = PartyJson.env(tags.kitchen)
+export kitchenFoodPrepJson = PartyJson.env(tags.kitchenFoodPrep)
+export kitchenFoodValidatorJson = PartyJson.env(tags.kitchenFoodValidator)
+export kitchenStockJson = PartyJson.env(tags.kitchenStock)
+export orderJson = PartyJson.env(tags.order)
+export orderDetailJson = PartyJson.env(tags.orderDetail)
+export serverJson = PartyJson.env(tags.server)
+export yellJson = PartyJson.env(tags.yell)
+export serverOrderJson = PartyJson.env(tags.serverOrder)
 export tapped = {
   pizzeria: Party.tap(env.pizzeria),
   kitchen: Party.tap(env.kitchen),

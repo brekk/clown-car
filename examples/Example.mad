@@ -28,6 +28,5 @@ myOrder :: Order
 myOrder = { name: "brekk", cost: 0.02, pizza: "salami scharf" }
 main = () => {
   Log.env.pizzeria("Welcome to Sal's", { complex: { values: { work: 30300330.30 } } })
-  // Log.envJson.pizzeria("order up", myOrder)
-  PartyJson.env(Log.tags.pizzeria, "order up", myOrder)
+  Log.pizzeriaJson("pancakes and pizza", myOrder)
 }
