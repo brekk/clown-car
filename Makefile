@@ -13,11 +13,14 @@ $(BUILD_DIR)/$(EXEC): $(DEPS)
 
 README.md: madlib.json
 	pilcrow -i README.md --repo brekk/clown-car --auto
+
+
 src/Version.mad: madlib.json
 	cat madlib.json | jq ".version" | sed '1s@^@export VERSION = @'
 
 version.lock:
 	madlib install
+	make -C madlib_modules/PartyBus/lib
 
 .PHONY: clean
 clean:

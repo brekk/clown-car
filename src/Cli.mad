@@ -4,6 +4,7 @@ import type { ClownState } from "@/State"
 
 import { Left, Right } from "Either"
 import Either from "Either"
+import Fn from "Function"
 import IO from "IO"
 import List from "List"
 import { Just, isJust } from "Maybe"
@@ -25,6 +26,7 @@ import { VERSION } from "@/Version"
 
 
 
+K = Fn.always
 conditionalColor = (fn, k, x) => k ? fn(x) : x
 CLOWNCAR = "clown-car 🤡🚗 (" ++ VERSION ++ ")"
 export FLAGS = [
@@ -142,7 +144,7 @@ export captureTheFlag = (state, flag) => where(flag) {
     } else if (k == "version") {
       #[true, { ...state, showVersion: true }]
     } else if (k == "format") {
-      #[true, { ...state, format: true }]
+      #[true, { ...state, format: v }]
     } else if (k == "color") {
       #[false, { ...state, useColor: v }]
     } else {
@@ -152,20 +154,21 @@ export captureTheFlag = (state, flag) => where(flag) {
   EFlags.InvalidFlag =>
     #[true, { ...state, failure: Just("Passed invalid flags") }]
 }
-writeOut = (useColor, jsonPath, src, outSrc, outPath) => pipe(
+rarifiedAir = (outSrc) => K(
+  pipe(
+    Shroud.cover("madlib"),
+    bimap(() => "Can't find madlib", () => "Written and formatted"),
+  )(["format", "--fix", "-i", outSrc]),
+)
+whenever = (k, gotta, go) => Fn.when(K(k), gotta)(go)
+writeOut = (useColor, format, jsonPath, src, outSrc, outPath) => pipe(
   MadlibJson.readAndParse,
   Wish.mapRej(SadClown(false, useColor)),
   chain(
     (json) => pipe(
       ClownCar.applySpiritGumWithRules(json),
       outPath,
-      chain(
-        (_) => pipe(
-          Shroud.cover("madlib"),
-          Wish.mapRej(() => "Can't find madlib"),
-          map(() => "Written and formatted"),
-        )(["format", "--fix", "-i", outSrc]),
-      ),
+      whenever(format, chain(rarifiedAir(outSrc))),
       Wish.mapRej(SadClown(false, useColor)),
     )(src),
   ),
@@ -209,25 +212,27 @@ handleFailCases = ({ useColor, showVersion, showHelp, madlibJsonPath, failure },
 export applyClownCar = where {
   Right(configRecord) =>
     do {
-      { input, madlibJsonPath, useColor, output, showHelp } = configRecord
+      { input, madlibJsonPath, useColor, output, showHelp, format } = configRecord
       clownPack = handleFailCases(configRecord)
-      clownUnpack = writeOut(useColor, madlibJsonPath)
+      clownUnpack = writeOut(useColor, format, madlibJsonPath)
       return where(#[input, output]) {
         #[Just(src), Just(out)] =>
-          clownPack(() => clownUnpack(src, out, _File.write(out)))
+          clownPack(K(clownUnpack(src, out, _File.write(out))))
 
         #[Just(src), _] =>
           do {
             out2 = _File.createClownName(src)
-            return clownPack(() => clownUnpack(src, out2, _File.write(out2)))
+            return clownPack(K(clownUnpack(src, out2, _File.write(out2))))
           }
 
         _ =>
           clownPack(
-            () => pipe(
-              SadClown(true, useColor),
-              Wish.bad,
-            )(showHelp ? FAIL_CASE : "--input is required"),
+            K(
+              pipe(
+                SadClown(true, useColor),
+                Wish.bad,
+              )(showHelp ? FAIL_CASE : "--input is required"),
+            ),
           )
       }
     }
