@@ -14,6 +14,7 @@ import Ensign from "ensign/Declared"
 import Declared from "ensign/Declared/Flags"
 import EPrint from "ensign/Declared/Print"
 import EFlags from "ensign/Flags"
+import Shroud from "shroud"
 
 import ClownCar from "@/ClownCar"
 import _File from "@/File"
@@ -151,13 +152,20 @@ export captureTheFlag = (state, flag) => where(flag) {
   EFlags.InvalidFlag =>
     #[true, { ...state, failure: Just("Passed invalid flags") }]
 }
-writeOut = (useColor, jsonPath, src, outPath) => pipe(
+writeOut = (useColor, jsonPath, src, outSrc, outPath) => pipe(
   MadlibJson.readAndParse,
   Wish.mapRej(SadClown(false, useColor)),
   chain(
     (json) => pipe(
       ClownCar.applySpiritGumWithRules(json),
       outPath,
+      chain(
+        (_) => pipe(
+          Shroud.cover("madlib"),
+          Wish.mapRej(() => "Can't find madlib"),
+          map(() => "Written and formatted"),
+        )(["format", "--fix", "-i", outSrc]),
+      ),
       Wish.mapRej(SadClown(false, useColor)),
     )(src),
   ),
@@ -170,32 +178,22 @@ export fillfull = Wish.fulfill(
         IO.put(renderHelpDeets(showHelp, useColor, FLAGS))
       } else do {
         IO.putLine(bad)
-        IO.put(renderHelpDeets(false, useColor, FLAGS))
+        IO.put(
+          renderHelpDeets(
+            // swap to a bad wish
+            false,
+            useColor,
+            FLAGS,
+          ),
+        )
       }
   },
   (good) => {
     IO.put(good)
   },
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
-///////////////////////////////////////
 )
-// check for explicit failure as we go, if so
 export consumeFlags = pipe(
   List.drop(1),
-  // swap to a bad wish
   parseArgs,
   map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
 )
@@ -216,10 +214,13 @@ export applyClownCar = where {
       clownUnpack = writeOut(useColor, madlibJsonPath)
       return where(#[input, output]) {
         #[Just(src), Just(out)] =>
-          clownPack(() => clownUnpack(src, _File.write(out)))
+          clownPack(() => clownUnpack(src, out, _File.write(out)))
 
         #[Just(src), _] =>
-          clownPack(() => clownUnpack(src, _File.writeDynamicName(src)))
+          do {
+            out2 = _File.createClownName(src)
+            return clownPack(() => clownUnpack(src, out2, _File.write(out2)))
+          }
 
         _ =>
           clownPack(
