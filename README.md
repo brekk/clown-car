@@ -3,7 +3,7 @@
 a helpful addition to the `party-bus`, enabling easy automatic log generation.
 
 [![Madlib Project Badge](https://img.shields.io/badge/madlib-purple?logo=github&logoSize=auto)](//github.com/madlib-lang/madlib) <!-- $MADLIB.projectBadge -->
-[![clown-car v1.0.0](https://img.shields.io/badge/v1.0.0-purple?label=version)](//github.com/brekk/clown-car) <!-- $MADLIB.json.version -->
+[![clown-car v2.0.0](https://img.shields.io/badge/v2.0.0-purple?label=version)](//github.com/brekk/clown-car) <!-- $MADLIB.json.version -->
 
 ## Usage
 
