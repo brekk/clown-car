@@ -20,14 +20,17 @@ import _File from "@/File"
 import MadlibJson from "@/MadlibJson"
 import { SadClown } from "@/State"
 import State from "@/State"
+import { VERSION } from "@/Version"
 
 
 
 conditionalColor = (fn, k, x) => k ? fn(x) : x
-CLOWNCAR = "clown-car 🤡🚗 (0.0.1)"
+CLOWNCAR = "clown-car 🤡🚗 (" ++ VERSION ++ ")"
 export FLAGS = [
   Declared.flagBoolean("help", ["h"], "🧐 These helpful explanations you're reading"),
+  Declared.flagBoolean("version", ["v"], "📖 The version! It's " ++ VERSION ++ ", btw."),
   Declared.flagBoolean("color", ["K"], "🎨 Use color? (default: true)"),
+  Declared.flagBoolean("format", ["F"], "📐 Format output? (default: true)"),
   Declared.flagString(
     "madlib-json",
     ["madlib", "M"],
@@ -135,6 +138,10 @@ export captureTheFlag = (state, flag) => where(flag) {
   EFlags.FlagToggle(k, v) =>
     if (k == "help") {
       #[true, { ...state, showHelp: true }]
+    } else if (k == "version") {
+      #[true, { ...state, showVersion: true }]
+    } else if (k == "format") {
+      #[true, { ...state, format: true }]
     } else if (k == "color") {
       #[false, { ...state, useColor: v }]
     } else {
@@ -169,37 +176,66 @@ export fillfull = Wish.fulfill(
   (good) => {
     IO.put(good)
   },
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
 )
+// check for explicit failure as we go, if so
 export consumeFlags = pipe(
   List.drop(1),
+  // swap to a bad wish
   parseArgs,
   map(processFlagState(State.INITIAL_STATE, captureTheFlag)),
 )
-// check for explicit failure as we go, if so
-// swap to a bad wish
+handleFailCases = ({ useColor, showVersion, showHelp, madlibJsonPath, failure }, elsewhere) => if (
+  showVersion
+) {
+  Wish.good(VERSION)
+} else if (showHelp || isJust(failure)) {
+  Wish.bad(SadClown(showHelp, useColor, (failure ?? FAIL_CASE)))
+} else {
+  elsewhere()
+}
 export applyClownCar = where {
-  Right({ failure, input, madlibJsonPath, useColor, output, showHelp }) =>
-    where(#[input, output]) {
-      #[Just(src), Just(out)] =>
-        if (showHelp || isJust(failure)) {
-          Wish.bad(SadClown(showHelp, useColor, (failure ?? FAIL_CASE)))
-        } else {
-          writeOut(useColor, madlibJsonPath, src, _File.write(out))
-        }
+  Right(configRecord) =>
+    do {
+      { input, madlibJsonPath, useColor, output, showHelp } = configRecord
+      clownPack = handleFailCases(configRecord)
+      clownUnpack = writeOut(useColor, madlibJsonPath)
+      return where(#[input, output]) {
+        #[Just(src), Just(out)] =>
+          clownPack(() => clownUnpack(src, _File.write(out)))
 
-      #[Just(src), _] =>
-        if (showHelp || isJust(failure)) {
-          Wish.bad(SadClown(showHelp, useColor, (failure ?? FAIL_CASE)))
-        } else {
-          writeOut(useColor, madlibJsonPath, src, _File.writeDynamicName(src))
-        }
+        #[Just(src), _] =>
+          clownPack(() => clownUnpack(src, _File.writeDynamicName(src)))
 
-      _ =>
-        Wish.bad(SadClown(true, useColor, showHelp ? FAIL_CASE : "--input is required"))
+        _ =>
+          clownPack(
+            () => pipe(
+              SadClown(true, useColor),
+              Wish.bad,
+            )(showHelp ? FAIL_CASE : "--input is required"),
+          )
+      }
     }
 
   Left(why) =>
-    Wish.bad(SadClown(false, true, why))
+    pipe(
+      SadClown(false, true),
+      Wish.bad,
+    )(why)
 }
 export processArgs = pipe(
   consumeFlags,

@@ -36,6 +36,11 @@
       "minVersion": "0.8.3",
       "url": "https://github.com/brekk/utter/archive/refs/tags/v0.8.3.zip",
       "description": "utter"
+    },
+    {
+      "minVersion": "1.0.0",
+      "url": "https://github.com/brekk/shroud/archive/refs/tags/v1.0.0.zip",
+      "description": "shroud"
     }
   ]
 }

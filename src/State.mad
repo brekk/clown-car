@@ -35,12 +35,14 @@ export alias ClownState = {
   bases :: List #[String, String],
   configured :: Boolean,
   failure :: Maybe String,
+  format :: Boolean,
   input :: Maybe String,
   madlibJsonPath :: String,
   output :: Maybe String,
   processed :: Boolean,
   results :: Wish SadClown String,
   showHelp :: Boolean,
+  showVersion :: Boolean,
   snapshot :: Maybe (List String),
   useColor :: Boolean,
 }
@@ -58,6 +60,8 @@ export INITIAL_STATE = {
   processed: false,
   results: Wish.bad(SadClown(true, true, "Unprocessed")),
   snapshot: Nothing,
+  showVersion: false,
+  format: true,
 }
 stringRef = (def, a, b) => !String.isEmpty(b) ? b : !String.isEmpty(a) ? a : def
 maybeRef = (ax, bx) => isJust(bx) ? bx : isJust(ax) ? ax : Nothing
@@ -76,6 +80,8 @@ export mergeStates = (a, b) => (
     processed: b.processed,
     results: b.results,
     snapshot: b.snapshot,
+    showVersion: b.showVersion,
+    format: b.format,
   }
 )
 export type ClownCarPayload
